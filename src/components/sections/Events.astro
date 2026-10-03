@@ -27,7 +27,9 @@ const events = content.events
 
 {
   events.length > 0 && (
-    <section class="section events" id={anchor ?? undefined}>
+    <section class="section events" id={anchor ?? undefined} data-events>
+      <div class="events__pin" data-pin>
+      <div class="events__stage" data-stage>
       <div class="container-site events__head">
         <SectionHeading eyebrow={data.eyebrow} title={data.title} subtitle={data.subtitle} />
         <div class="events__controls" data-reveal>
@@ -90,6 +92,8 @@ const events = content.events
           <span data-carousel-progress />
         </div>
       </div>
+      </div>
+      </div>
     </section>
   )
 }
@@ -134,16 +138,17 @@ const events = content.events
     cursor: not-allowed;
   }
 
-  /* trilho alinhado ao container à esquerda e "sangrando" à direita */
+  /* trilho alinhado ao container à esquerda e "sangrando" à direita.
+     padding/margin vertical evitam cortar o hover (lift + sombra) dos cards */
   .events__viewport {
     --edge: max(var(--gutter), calc((100vw - 1280px) / 2 + var(--gutter)));
-    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+    margin-block: calc(clamp(2.5rem, 5vw, 3.5rem) - 1.5rem) -1rem;
+    padding-block: 1.5rem 2rem;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
     scroll-padding-inline: var(--edge);
     scrollbar-width: none;
-    border-radius: 0;
   }
   .events__viewport::-webkit-scrollbar {
     display: none;
@@ -156,7 +161,49 @@ const events = content.events
     gap: 1rem;
     width: max-content;
     padding-inline: var(--edge);
-    padding-bottom: 0.5rem;
+  }
+
+  /* ---------- modo cinematográfico: o scroll vertical conduz o trilho ---------- */
+  .events.is-pinned {
+    padding-block: 0;
+  }
+  .events.is-pinned .events__stage {
+    position: sticky;
+    top: 0;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: calc(var(--header-h) + 1rem) 2.5rem;
+    overflow: clip;
+  }
+  .events.is-pinned .events__viewport {
+    overflow: visible;
+    scroll-snap-type: none;
+    margin-block: clamp(1rem, 3vh, 2.5rem) 0;
+    padding-block: 1.5rem;
+  }
+  .events.is-pinned .events__track {
+    gap: clamp(1rem, 2vw, 1.75rem);
+    will-change: transform;
+    transform: translate3d(var(--pin-x, 0px), 0, 0);
+  }
+  .events.is-pinned .event-card {
+    width: clamp(17rem, 27vw, 24rem);
+  }
+  .events.is-pinned .event-card__media img {
+    width: 112%;
+    max-width: none;
+    height: 100%;
+    object-fit: cover;
+    transform: translate3d(calc(var(--par, 0) * -6%), 0, 0);
+    transition: none;
+  }
+  .events.is-pinned .event-card article:hover .event-card__media img {
+    transform: translate3d(calc(var(--par, 0) * -6%), 0, 0);
+  }
+  .events.is-pinned .events__progress {
+    margin-top: 1.5rem;
   }
 
   .event-card {
@@ -305,19 +352,28 @@ const events = content.events
   }
 </style>
 
+
 <script>
-  document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((viewport) => {
-    const section = viewport.closest('section');
-    const prev = section?.querySelector<HTMLButtonElement>('[data-carousel-prev]');
-    const next = section?.querySelector<HTMLButtonElement>('[data-carousel-next]');
-    const bar = section?.querySelector<HTMLElement>('[data-carousel-progress]');
+  const section = document.querySelector<HTMLElement>('[data-events]');
+  const viewport = section?.querySelector<HTMLElement>('[data-carousel]');
+  const track = viewport?.querySelector<HTMLElement>('.events__track');
 
-    const step = () => {
-      const card = viewport.querySelector<HTMLElement>('.event-card');
-      return card ? card.offsetWidth + 16 : viewport.clientWidth * 0.8;
-    };
+  if (section && viewport && track) {
+    const pin = section.querySelector<HTMLElement>('[data-pin]')!;
+    const stage = section.querySelector<HTMLElement>('[data-stage]')!;
+    const prev = section.querySelector<HTMLButtonElement>('[data-carousel-prev]');
+    const next = section.querySelector<HTMLButtonElement>('[data-carousel-next]');
+    const bar = section.querySelector<HTMLElement>('[data-carousel-progress]');
+    const controls = section.querySelector<HTMLElement>('.events__controls');
+    const cards = Array.from(track.querySelectorAll<HTMLElement>('.event-card'));
 
-    const sync = () => {
+    const wide = matchMedia('(min-width: 768px) and (hover: hover) and (pointer: fine)');
+    const calm = matchMedia('(prefers-reduced-motion: reduce)');
+    const gap = () => parseFloat(getComputedStyle(track).columnGap) || 16;
+    const step = () => (cards[0] ? cards[0].offsetWidth + gap() : viewport.clientWidth * 0.8);
+
+    // modo nativo (mobile / toque / movimento reduzido): scroll horizontal com snap
+    const syncNative = () => {
       const max = viewport.scrollWidth - viewport.clientWidth;
       const x = viewport.scrollLeft;
       if (prev) prev.disabled = x <= 4;
@@ -325,17 +381,111 @@ const events = content.events
       const visible = viewport.clientWidth / viewport.scrollWidth;
       const p = max > 0 ? visible + (1 - visible) * (x / max) : 1;
       bar?.style.setProperty('--carousel-p', p.toFixed(3));
-      if (section && max <= 4) section.querySelector('.events__controls')?.setAttribute('hidden', '');
+      controls?.toggleAttribute('hidden', max <= 4);
     };
 
-    prev?.addEventListener('click', () => viewport.scrollBy({ left: -step(), behavior: 'smooth' }));
-    next?.addEventListener('click', () => viewport.scrollBy({ left: step(), behavior: 'smooth' }));
+    // modo fixo: o scroll vertical (e o horizontal) conduz o trilho com inércia
+    let pinned = false;
+    let maxX = 0; // deslocamento total do trilho
+    let travel = 0; // scroll vertical equivalente
+    let top = 0; // scrollY em que o palco gruda
+    let current = 0; // progresso suavizado 0..1
+    let raf = 0;
+
+    const target = () => Math.min(1, Math.max(0, (scrollY - top) / (travel || 1)));
+
+    const paint = () => {
+      track.style.setProperty('--pin-x', `${(-current * maxX).toFixed(2)}px`);
+      bar?.style.setProperty('--carousel-p', (0.12 + 0.88 * current).toFixed(3));
+      if (prev) prev.disabled = current <= 0.005;
+      if (next) next.disabled = current >= 0.995;
+      for (const c of cards) {
+        const r = c.getBoundingClientRect();
+        const center = (r.left + r.width / 2) / innerWidth;
+        c.style.setProperty('--par', ((center - 0.5) * 2).toFixed(3));
+      }
+    };
+
+    const tick = () => {
+      const t = target();
+      current += (t - current) * 0.1;
+      if (Math.abs(t - current) < 0.0004) current = t;
+      paint();
+      raf = current === t ? 0 : requestAnimationFrame(tick);
+    };
+    const kick = () => {
+      if (pinned && !raf) raf = requestAnimationFrame(tick);
+    };
+
+    const measure = () => {
+      const edge = parseFloat(getComputedStyle(viewport).getPropertyValue('--edge')) || 0;
+      maxX = Math.max(0, track.scrollWidth - innerWidth + edge * 0.4);
+      travel = maxX * 1.1;
+      pin.style.height = `${stage.offsetHeight + travel}px`;
+      top = pin.getBoundingClientRect().top + scrollY;
+    };
+
+    const disable = () => {
+      pinned = false;
+      cancelAnimationFrame(raf);
+      raf = 0;
+      section.classList.remove('is-pinned');
+      pin.style.height = '';
+      track.style.removeProperty('--pin-x');
+      cards.forEach((c) => c.style.removeProperty('--par'));
+      syncNative();
+    };
+    const enable = () => {
+      pinned = true;
+      section.classList.add('is-pinned');
+      viewport.scrollLeft = 0;
+      pin.style.height = '';
+      // conteúdo mais alto que a tela não pode grudar: volta ao modo nativo
+      if (stage.offsetHeight > innerHeight + 2) return disable();
+      measure();
+      current = target();
+      controls?.removeAttribute('hidden');
+      paint();
+    };
+    const evaluate = () => (wide.matches && !calm.matches ? enable() : disable());
+
+    const go = (dir: 1 | -1) => {
+      if (pinned) {
+        const dy = (step() / (maxX || 1)) * travel * dir;
+        scrollTo({ top: Math.min(top + travel, Math.max(top, scrollY + dy)), behavior: 'smooth' });
+      } else {
+        viewport.scrollBy({ left: step() * dir, behavior: 'smooth' });
+      }
+    };
+
+    prev?.addEventListener('click', () => go(-1));
+    next?.addEventListener('click', () => go(1));
     viewport.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight') viewport.scrollBy({ left: step(), behavior: 'smooth' });
-      if (e.key === 'ArrowLeft') viewport.scrollBy({ left: -step(), behavior: 'smooth' });
+      if (e.key === 'ArrowRight') (e.preventDefault(), go(1));
+      if (e.key === 'ArrowLeft') (e.preventDefault(), go(-1));
     });
-    viewport.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
-    window.addEventListener('resize', sync);
-    sync();
-  });
+    viewport.addEventListener('scroll', () => !pinned && requestAnimationFrame(syncNative), { passive: true });
+
+    // gesto horizontal (trackpad / shift+roda) também conduz o carrossel
+    addEventListener(
+      'wheel',
+      (e) => {
+        if (!pinned || e.ctrlKey || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+        const t = target();
+        const inside = scrollY >= top - 1 && scrollY <= top + travel + 1;
+        if (!inside || (t <= 0 && e.deltaX < 0) || (t >= 1 && e.deltaX > 0)) return;
+        e.preventDefault();
+        scrollBy({ top: e.deltaX * (travel / (maxX || 1)), behavior: 'instant' });
+      },
+      { passive: false },
+    );
+
+    addEventListener('scroll', kick, { passive: true });
+    addEventListener('resize', () => (pinned ? evaluate() : syncNative()));
+    wide.addEventListener('change', evaluate);
+    calm.addEventListener('change', evaluate);
+    addEventListener('load', () => pinned && (measure(), kick()));
+    document.fonts?.ready.then(() => pinned && (measure(), kick()));
+    evaluate();
+  }
 </script>

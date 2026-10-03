@@ -10,11 +10,11 @@
 
 @theme {
   /* Superfícies — derivadas do cinza da marca (Opcional 04) */
-  --color-bg: #2b2829;
-  --color-bg-deep: #232021;
-  --color-surface: #373435;
-  --color-surface-2: #423e40;
-  --color-surface-3: #4d494b;
+  --color-bg: #231f20;
+  --color-bg-deep: #191617;
+  --color-surface: #2f2c2d;
+  --color-surface-2: #3a3637;
+  --color-surface-3: #464243;
   --color-line: rgb(238 238 238 / 0.1);
   --color-line-strong: rgb(238 238 238 / 0.18);
 
@@ -46,6 +46,42 @@
 
   --radius-card: 1.75rem;
   --radius-sheet: 2.75rem;
+}
+
+/* Tema alternativo — Opcional 02 (#48396F, Pantone 5265 C) como fundo */
+html[data-theme='violet'] {
+  --color-bg: #3d2f63;
+  --color-bg-deep: #30244f;
+  --color-surface: #48396f;
+  --color-surface-2: #54447e;
+  --color-surface-3: #61508d;
+  --color-line: rgb(238 238 238 / 0.12);
+  --color-line-strong: rgb(238 238 238 / 0.22);
+  --color-ink-soft: #dcd6e6;
+  --color-ink-muted: #b5abc9;
+  --color-violet: #8a6fc4;
+}
+
+/* Troca de tema: círculo que nasce do botão (View Transitions) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  z-index: 2;
+  animation: theme-reveal 0.95s var(--ease-out-expo) both;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--tx, 50%) var(--ty, 100%));
+  }
+  to {
+    clip-path: circle(150vmax at var(--tx, 50%) var(--ty, 100%));
+  }
 }
 
 /* =====================================================================

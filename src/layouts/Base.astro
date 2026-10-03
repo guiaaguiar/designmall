@@ -26,7 +26,7 @@ const ogImage = new URL(image ?? settings.seo.image, Astro.site ?? Astro.url).hr
     <title>{pageTitle}</title>
     <meta name="description" content={pageDescription} />
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content="#2B2829" />
+    <meta name="theme-color" content="#231F20" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
     <meta property="og:type" content="website" />
@@ -39,7 +39,12 @@ const ogImage = new URL(image ?? settings.seo.image, Astro.site ?? Astro.url).hr
     <meta name="twitter:card" content="summary_large_image" />
 
     <!-- Marca o documento como "com JS" antes da pintura: evita flash nas animações de entrada -->
-    <script is:inline>document.documentElement.classList.add('js');</script>
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      try {
+        if (localStorage.getItem('dm-theme') === 'violet') document.documentElement.dataset.theme = 'violet';
+      } catch {}
+    </script>
     <slot name="head" />
   </head>
   <body>
