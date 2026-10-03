@@ -180,6 +180,53 @@ const searchText = [store.name, category?.name, store.floor, ...store.tags]
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  .store-card {
+    min-width: 0;
+  }
+  .store-card__name {
+    overflow-wrap: anywhere;
+  }
+  /* celular: cartão compacto, em 2 colunas */
+  @media (max-width: 559px) {
+    .store-card__cover {
+      aspect-ratio: 4 / 3;
+      margin: 0.375rem 0.375rem 0;
+      border-radius: calc(var(--radius-card) - 0.75rem);
+    }
+    .store-card__logo {
+      left: 0.5rem;
+      bottom: 0.5rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.75rem;
+      font-size: 0.9375rem;
+    }
+    .store-card__badge {
+      top: 0.5rem;
+      left: 0.5rem;
+      padding: 0.1875rem 0.5rem;
+      font-size: 0.6875rem;
+    }
+    .store-card__body {
+      gap: 0.375rem;
+      padding: 0.75rem 0.875rem 1rem;
+    }
+    .store-card__name {
+      font-size: 1.0625rem;
+      line-height: 1.1;
+    }
+    .store-card__meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.125rem;
+      font-size: 0.75rem;
+    }
+    .store-card__link .store-card__desc,
+    .store-card__link .store-card__go {
+      display: none;
+    }
+  }
+
   .store-card__go {
     position: absolute;
     right: 1rem;

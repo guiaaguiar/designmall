@@ -180,11 +180,13 @@ const usedCategories = categories.filter((c) => stores.some((s) => s.categoryId 
     display: grid;
     gap: 1rem;
     margin-top: 1rem;
-    grid-template-columns: 1fr;
+    /* celular: 2 colunas compactas (a lista de 12 lojas não vira uma rolagem interminável) */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
   }
   @media (min-width: 560px) {
     .store-grid__list {
-      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
     }
   }
   @media (min-width: 900px) {

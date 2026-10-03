@@ -116,7 +116,7 @@ const tones = ['pink', 'teal', 'violet'] as const;
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: linear-gradient(to top, rgb(35 31 32 / 0.88) 0%, rgb(35 31 32 / 0.25) 45%, rgb(35 31 32 / 0) 70%);
+    background: linear-gradient(to top, rgb(35 31 32 / 0.92) 0%, rgb(35 31 32 / 0.5) 42%, rgb(35 31 32 / 0) 72%);
   }
   .gallery__fig figcaption {
     position: absolute;
@@ -131,7 +131,7 @@ const tones = ['pink', 'teal', 'violet'] as const;
   .gallery__tag {
     padding: 0.25rem 0.75rem;
     border-radius: 999px;
-    background: var(--tone-soft);
+    background: color-mix(in srgb, var(--tone) 22%, rgb(35 31 32 / 0.7));
     backdrop-filter: blur(8px);
     color: var(--tone);
     font-size: 0.75rem;
