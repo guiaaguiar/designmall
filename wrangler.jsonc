@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "design-mall",
+  "name": "designmall",
   "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2026-09-30",
   "compatibility_flags": ["nodejs_compat"],
@@ -12,6 +12,7 @@
     {
       "binding": "DB",
       "database_name": "design-mall-db",
+      "database_id": "cce3c111-e3f4-447c-9527-a86e19aacad5",
       "migrations_dir": "migrations"
     }
   ]
