@@ -22,7 +22,7 @@ const nav = settings.nav.map((l) => ({ ...l, href: resolveHref(l.href) }));
 const cta = settings.headerCta ? { ...settings.headerCta, href: resolveHref(settings.headerCta.href) } : null;
 ---
 
-<header class="site-header" data-header>
+<header class="site-header" data-header data-mosaic={isHome ? '' : undefined}>
   <div class="shell">
     <a class="brand" href={isHome ? '#inicio' : '/'} aria-label={`${settings.name} — página inicial`}>
       <Logo class="brand__logo" />
@@ -120,6 +120,17 @@ const cta = settings.headerCta ? { ...settings.headerCta, href: resolveHref(sett
     display: flex;
     justify-content: center;
     pointer-events: none;
+  }
+
+  /* no topo da home, a coluna de grafismos da hero sobe até a borda e atravessa o header:
+     o véu escuro e a navegação deixam essa faixa livre para formar uma barra completa */
+  @media (min-width: 1280px) {
+    .site-header[data-mosaic]:not(.is-floating) .nav {
+      margin-right: var(--hero-mosaic-w);
+    }
+  }
+  .site-header[data-mosaic]:not(.is-floating)::before {
+    right: var(--hero-mosaic-w);
   }
 
   /* véu escuro no topo para garantir leitura sobre a foto do hero */

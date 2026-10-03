@@ -94,6 +94,7 @@ html[data-theme='violet'] {
     interpolate-size: allow-keywords;
     --header-h: 84px;
     --gutter: clamp(1.25rem, 4vw, 3rem);
+    --hero-mosaic-w: clamp(220px, 21vw, 320px);
   }
 
   html {

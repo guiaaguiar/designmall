@@ -14,14 +14,15 @@ const { data, anchor } = Astro.props;
 const lines = data.title.split('\n');
 ---
 
-<section class="hero" id={anchor ?? undefined} aria-labelledby="hero-title" data-hero data-has-video={data.video ? '' : undefined}>
+<section class="hero" id={anchor ?? undefined} aria-labelledby="hero-title" data-hero data-phase="start" data-has-video={data.video ? '' : undefined}>
   <div class="hero__media" aria-hidden="true">
     {
       data.video && (
         <>
-          <img class="hero__poster" src={data.video.poster} alt="" width="1920" height="1080" fetchpriority="high" decoding="async" />
           <video class="hero__video" data-hero-fwd src={data.video.src} muted playsinline preload="auto" tabindex="-1" />
           <video class="hero__video hero__video--rev" data-hero-rev src={data.video.reverseSrc} muted playsinline preload="auto" tabindex="-1" />
+          <img class="hero__poster hero__poster--start" src={data.video.poster} alt="" width="1920" height="1080" fetchpriority="high" decoding="async" />
+          <img class="hero__poster hero__poster--end" src={data.video.posterEnd ?? data.video.poster} alt="" width="1920" height="1080" decoding="async" />
         </>
       )
     }
@@ -162,6 +163,16 @@ const lines = data.title.split('\n');
     inset: 0;
     object-position: 38% 50%;
   }
+  /* os quadros-pôster cobrem o vídeo parado: início antes de tocar, fim depois da animação.
+     Assim a imagem que fica é exatamente o 1º / último quadro, sem depender de seek. */
+  .hero__poster {
+    opacity: 0;
+    z-index: 1;
+  }
+  .hero[data-phase='start'] .hero__poster--start,
+  .hero[data-phase='end'] .hero__poster--end {
+    opacity: 1;
+  }
   /* vídeo invertido fica por baixo, pronto no 1º quadro, e só aparece ao rolar para cima */
   .hero__video--rev {
     visibility: hidden;
@@ -208,9 +219,9 @@ const lines = data.title.split('\n');
   /* coluna de grafismos à direita — como a capa do manual */
   .hero :global(.hero__mosaic) {
     position: absolute;
-    top: var(--header-h);
+    top: 0;
     right: 0;
-    width: clamp(220px, 21vw, 320px);
+    width: var(--hero-mosaic-w);
     z-index: 0;
     opacity: calc(1 - var(--hero-v) * 3);
   }
@@ -264,6 +275,9 @@ const lines = data.title.split('\n');
   @media (prefers-reduced-motion: reduce) {
     .hero__video {
       display: none;
+    }
+    .hero[data-phase] .hero__poster--start {
+      opacity: 1;
     }
   }
 
@@ -362,7 +376,7 @@ const lines = data.title.split('\n');
     gap: 2rem;
     padding-top: 1.75rem;
     border-top: 1px solid var(--color-line);
-    max-width: calc(100% - clamp(220px, 21vw, 320px));
+    max-width: calc(100% - var(--hero-mosaic-w));
   }
   .hero__highlights {
     display: flex;
@@ -431,7 +445,7 @@ const lines = data.title.split('\n');
 
   @media (max-width: 767px) {
     .hero :global(.hero__mosaic) {
-      top: calc(var(--header-h) + 0.5rem);
+      top: 0;
       width: 38vw;
       max-width: 180px;
     }
@@ -493,6 +507,8 @@ const lines = data.title.split('\n');
     let topSince = window.scrollY <= 1 ? performance.now() : Infinity;
     let raf = 0;
 
+    const phase = (p: 'start' | 'play' | 'end') => (hero.dataset.phase = p);
+    phase(state === 'end' ? 'end' : 'start');
     const setV = (v: number) => hero.style.setProperty('--hero-v', Math.min(1, Math.max(0, v)).toFixed(4));
 
     const locked = () => state === 'playing' || (state === 'start' && ready);
@@ -511,16 +527,16 @@ const lines = data.title.split('\n');
       state = at;
       cooldownUntil = performance.now() + 700;
       cancelAnimationFrame(raf);
+      phase(at);
       if (at === 'start') {
-        // o invertido continua na tela até o vídeo normal chegar ao 1º quadro (sem piscar)
-        fwd.addEventListener('seeked', showFwd, { once: true });
         fwd.currentTime = 0;
         rev.currentTime = 0;
+        showFwd();
         setV(0);
         topSince = performance.now();
         window.scrollTo(0, 0);
       } else {
-        fwd.currentTime = Math.max(0, fwd.duration - 0.001);
+        // a hero fica no pôster do último quadro; o invertido já espera no 1º quadro dele (= último do normal)
         rev.currentTime = 0;
         showFwd();
         setV(1);
@@ -530,6 +546,7 @@ const lines = data.title.split('\n');
     const play = (dir: 1 | -1) => {
       if (state === 'playing' || !ready) return;
       state = 'playing';
+      phase('play');
       const v = dir === 1 ? fwd : rev;
       const other = dir === 1 ? rev : fwd;
       other.pause();
@@ -552,11 +569,7 @@ const lines = data.title.split('\n');
     const onReady = () => {
       if (++loaded < 2) return;
       ready = true;
-      if (state === 'start' && window.scrollY > 4) state = 'end';
-      if (state === 'end') {
-        fwd.currentTime = Math.max(0, fwd.duration - 0.001);
-        setV(1);
-      }
+      if (state === 'start' && window.scrollY > 4) (state = 'end'), phase('end'), setV(1);
     };
     [fwd, rev].forEach((v) => {
       if (v.readyState >= 3) onReady();
@@ -613,7 +626,7 @@ const lines = data.title.split('\n');
     window.addEventListener(
       'scroll',
       () => {
-        if (!ready && state === 'start' && window.scrollY > 4) (state = 'end'), setV(1);
+        if (!ready && state === 'start' && window.scrollY > 4) (state = 'end'), phase('end'), setV(1);
         if (window.scrollY <= 1) {
           if (topSince === Infinity) topSince = performance.now();
         } else topSince = Infinity;

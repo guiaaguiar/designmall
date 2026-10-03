@@ -108,8 +108,10 @@ export const sectionSchemas = {
       .object({
         src: z.string(),
         reverseSrc: z.string(),
-        /** primeiro quadro (mostrado enquanto o vídeo carrega) */
+        /** primeiro quadro (mostrado antes de tocar e enquanto o vídeo carrega) */
         poster: z.string(),
+        /** último quadro — a imagem que permanece na hero depois da animação */
+        posterEnd: z.string().optional(),
       })
       .optional(),
     /** legenda que surge no fim do vídeo */

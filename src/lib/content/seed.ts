@@ -58,8 +58,8 @@ export const seedSettings: Settings = {
     { label: 'Lojas', href: '#lojas' },
     { label: 'Agenda', href: '#agenda' },
     { label: 'Visite', href: '#visite' },
+    { label: 'Newsletter', href: '#newsletter' },
   ],
-  headerCta: { label: 'Receber novidades', href: '#newsletter' },
   footer: {
     tagline: 'Um presente para todos.',
     copyright: '© {ano} Design Mall. Todos os direitos reservados.',
@@ -114,6 +114,7 @@ const sectionList = [
         src: '/video/hero.mp4',
         reverseSrc: '/video/hero-rev.mp4',
         poster: '/images/hero-start.webp',
+        posterEnd: '/images/hero-end.webp',
       },
       endLabel: 'Design Mall',
       endText: 'Um presente para todos.',
