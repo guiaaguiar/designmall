@@ -123,17 +123,13 @@ const cta = settings.headerCta ? { ...settings.headerCta, href: resolveHref(sett
   }
 
   /* no topo da home, a coluna de grafismos da hero sobe até a borda e atravessa o header:
-     o véu escuro e a navegação deixam essa faixa livre para formar uma barra completa */
+     o véu do header cobre a largura toda (inclusive sobre os grafismos); só a navegação desvia da coluna */
   @media (min-width: 1280px) {
     .site-header[data-mosaic]:not(.is-floating) .nav {
       margin-right: var(--hero-mosaic-w);
     }
   }
-  .site-header[data-mosaic]:not(.is-floating)::before {
-    /* esmaece antes da coluna de grafismos, sem aresta dura quando ela some no quadro final */
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--hero-mosaic-w) - 14rem), transparent calc(100% - var(--hero-mosaic-w)));
-    mask-image: linear-gradient(to right, #000 calc(100% - var(--hero-mosaic-w) - 14rem), transparent calc(100% - var(--hero-mosaic-w)));
-  }
+
 
   /* véu escuro no topo para garantir leitura sobre a foto do hero */
   .site-header::before {
