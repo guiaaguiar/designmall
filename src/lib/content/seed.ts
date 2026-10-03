@@ -98,7 +98,7 @@ const sectionList = [
     type: 'hero',
     anchor: 'inicio',
     data: {
-      eyebrow: 'Design Life Center',
+      eyebrow: '',
       title: 'Viva\no *novo.*',
       subtitle:
         'Jardins suspensos, café no átrio, rooftop com vista para a cidade e lojas conectadas em um só lugar. O Design Mall foi pensado como um presente — para a cidade e para você.',

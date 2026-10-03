@@ -127,7 +127,7 @@ const lines = data.title.split('\n');
     position: relative;
     z-index: 0;
     display: flex;
-    min-height: max(100svh, 640px);
+    height: max(100svh, 640px);
     overflow: hidden;
     isolation: isolate;
     background: var(--color-bg-deep);
@@ -198,6 +198,7 @@ const lines = data.title.split('\n');
   .hero__veil {
     position: absolute;
     inset: 0;
+    z-index: 2; /* acima dos pôsteres, para o filtro valer também no 1º e no último quadro */
     opacity: calc(1 - var(--hero-v) * 0.9);
     background:
       radial-gradient(55% 60% at 78% 18%, rgb(240 95 142 / 0.2), transparent 70%),
@@ -231,7 +232,9 @@ const lines = data.title.split('\n');
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    gap: clamp(2.5rem, 6vh, 4.5rem);
+    flex: 1;
+    min-height: 0;
+    gap: clamp(1.25rem, 4svh, 4.5rem);
     padding-top: calc(var(--header-h) + 2rem);
     padding-bottom: calc(var(--radius-sheet) + clamp(1.5rem, 4vh, 3rem));
     transform: translate3d(0, calc(var(--hero-p) * -70px), 0);
@@ -304,7 +307,7 @@ const lines = data.title.split('\n');
 
   .hero-title {
     margin-top: 1.5rem;
-    font-size: clamp(3.75rem, 12.5vw, 10.5rem);
+    font-size: clamp(3.25rem, min(12.5vw, 15svh), 10.5rem);
     font-weight: 900;
     line-height: 0.86;
     letter-spacing: -0.055em;
@@ -329,7 +332,7 @@ const lines = data.title.split('\n');
   }
 
   .hero__subtitle {
-    margin-top: 1.75rem;
+    margin-top: clamp(1rem, 2.5svh, 1.75rem);
     max-width: 34rem;
     font-size: clamp(1.0625rem, 1.5vw, 1.25rem);
     line-height: 1.6;
@@ -340,7 +343,7 @@ const lines = data.title.split('\n');
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-top: 2.25rem;
+    margin-top: clamp(1.25rem, 3.5svh, 2.25rem);
   }
 
   html.js .hero__eyebrow,
@@ -434,6 +437,15 @@ const lines = data.title.split('\n');
     }
   }
 
+  @media (max-height: 700px) and (min-width: 768px) {
+    .hero__highlights {
+      display: none;
+    }
+    .hero__subtitle {
+      font-size: 1rem;
+    }
+  }
+
   @media (max-width: 1023px) {
     .hero__bottom {
       max-width: none;
@@ -501,6 +513,7 @@ const lines = data.title.split('\n');
 
   if (hero && fwd && rev && !reduce.matches) {
     type State = 'start' | 'end' | 'playing';
+    const SPEED = 1.5; // 2,67 s → ~1,8 s
     let state: State = window.scrollY > 4 ? 'end' : 'start';
     let ready = false;
     let cooldownUntil = 0;
@@ -550,6 +563,7 @@ const lines = data.title.split('\n');
       const v = dir === 1 ? fwd : rev;
       const other = dir === 1 ? rev : fwd;
       other.pause();
+      v.playbackRate = SPEED;
       if (dir === 1) showFwd();
       else showRev();
       const run = v.play();
