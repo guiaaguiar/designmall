@@ -1,0 +1,100 @@
+---
+/** Abertura das páginas internas: trilha de navegação + título + grafismos. */
+import Mosaic from '../brand/Mosaic.astro';
+import Icon from '../ui/Icon.astro';
+import { richText } from '../../lib/text';
+
+interface Props {
+  crumbs: { label: string; href?: string }[];
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+}
+
+const { crumbs, eyebrow, title, subtitle } = Astro.props;
+---
+
+<section class="intro">
+  <Mosaic cols={3} rows={2} seed={8} live class="intro__mosaic" />
+  <div class="container-site">
+    <nav aria-label="Você está em">
+      <ol class="intro__crumbs">
+        {
+          crumbs.map((c, i) => (
+            <li>
+              {c.href ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}
+              {i < crumbs.length - 1 && <Icon name="chevron-right" size={14} />}
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+    {eyebrow && <p class="eyebrow intro__eyebrow">{eyebrow}</p>}
+    <h1 class="display-title intro__title" set:html={richText(title)} />
+    {subtitle && <p class="lead intro__subtitle">{subtitle}</p>}
+    <slot />
+  </div>
+</section>
+
+<style>
+  .intro {
+    position: relative;
+    padding-top: calc(var(--header-h) + clamp(2.5rem, 6vw, 4.5rem));
+    padding-bottom: clamp(2rem, 4vw, 3rem);
+    overflow: hidden;
+  }
+  .intro :global(.intro__mosaic) {
+    position: absolute;
+    top: var(--header-h);
+    right: 0;
+    width: clamp(160px, 22vw, 330px);
+    opacity: 0.9;
+    z-index: 0;
+  }
+  @media (max-width: 767px) {
+    .intro :global(.intro__mosaic) {
+      display: none;
+    }
+  }
+  .intro .container-site {
+    position: relative;
+    z-index: 1;
+  }
+  .intro__crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--color-ink-muted);
+  }
+  .intro__crumbs li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .intro__crumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    transition: color 0.2s ease;
+  }
+  .intro__crumbs a:hover {
+    color: var(--color-ink);
+  }
+  .intro__crumbs [aria-current] {
+    color: var(--color-ink-soft);
+    font-weight: 600;
+  }
+  .intro__eyebrow {
+    margin-top: 2rem;
+  }
+  .intro__title {
+    margin-top: 1rem;
+    max-width: 16ch;
+    font-size: clamp(2.75rem, 7vw, 5.5rem);
+  }
+  .intro__subtitle {
+    margin-top: 1.25rem;
+  }
+</style>

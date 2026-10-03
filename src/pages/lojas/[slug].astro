@@ -1,0 +1,241 @@
+---
+import Base from '../../layouts/Base.astro';
+import Header from '../../components/layout/Header.astro';
+import Footer from '../../components/layout/Footer.astro';
+import PageIntro from '../../components/layout/PageIntro.astro';
+import StoreCard from '../../components/stores/StoreCard.astro';
+import StoreCover from '../../components/stores/StoreCover.astro';
+import Icon from '../../components/ui/Icon.astro';
+import { getSiteContent } from '../../lib/content/repository';
+import { initials } from '../../lib/text';
+
+const content = await getSiteContent();
+const { settings, stores, categories } = content;
+const store = stores.find((s) => s.slug === Astro.params.slug);
+if (!store) return Astro.rewrite('/404');
+
+const category = categories.find((c) => c.id === store.categoryId);
+const related = stores.filter((s) => s.id !== store.id && s.categoryId === store.categoryId).slice(0, 4);
+const onlyDigits = (v: string) => v.replace(/\D/g, '');
+const instagramUrl = store.instagram
+  ? store.instagram.startsWith('http')
+    ? store.instagram
+    : `https://instagram.com/${store.instagram.replace(/^@/, '')}`
+  : '';
+
+const contacts = [
+  store.whatsapp && { icon: 'whatsapp', label: 'WhatsApp', href: `https://wa.me/55${onlyDigits(store.whatsapp)}` },
+  instagramUrl && { icon: 'instagram', label: 'Instagram', href: instagramUrl },
+  store.website && { icon: 'globe', label: 'Site', href: store.website },
+  store.phone && { icon: 'phone', label: store.phone, href: `tel:${onlyDigits(store.phone)}` },
+].filter(Boolean) as { icon: string; label: string; href: string }[];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Store',
+  name: store.name,
+  description: store.description || store.shortDescription,
+  image: store.coverUrl ?? undefined,
+  telephone: store.phone || undefined,
+  containedInPlace: { '@type': 'ShoppingCenter', name: settings.name },
+};
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+---
+
+<Base
+  settings={settings}
+  title={`${store.name} — ${settings.name}`}
+  description={store.shortDescription || `${store.name} no ${settings.name}.`}
+  image={store.coverUrl ?? undefined}
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+  <Header settings={settings} isHome={false} />
+
+  <main id="conteudo">
+    <PageIntro
+      crumbs={[{ label: 'Início', href: '/' }, { label: 'Lojas', href: '/lojas' }, { label: store.name }]}
+      eyebrow={category?.name}
+      title={store.name}
+      subtitle={store.shortDescription}
+    />
+
+    <section class="store" data-tone={category?.tone ?? 'pink'}>
+      <div class="container-site store__grid">
+        <div class="store__cover media-frame" style={`view-transition-name: loja-${store.slug}`}>
+          {store.coverUrl ? <img src={store.coverUrl} alt={`Fachada da loja ${store.name}`} /> : <StoreCover seed={store.slug} />}
+          <span class="store__logo" aria-hidden="true">
+            {store.logoUrl ? <img src={store.logoUrl} alt="" /> : initials(store.name)}
+          </span>
+        </div>
+
+        <aside class="store__info">
+          <dl class="store__facts">
+            {
+              (store.floor || store.unit) && (
+                <div>
+                  <dt>
+                    <Icon name="map-pin" size={18} /> Onde fica
+                  </dt>
+                  <dd>{[store.floor, store.unit].filter(Boolean).join(' · ')}</dd>
+                </div>
+              )
+            }
+            <div>
+              <dt>
+                <Icon name="clock" size={18} /> Horário
+              </dt>
+              <dd>{store.hours || settings.hours[0]?.value || 'Consulte a loja'}</dd>
+            </div>
+            {
+              category && (
+                <div>
+                  <dt>
+                    <Icon name={category.icon} size={18} /> Experiência
+                  </dt>
+                  <dd>{category.name}</dd>
+                </div>
+              )
+            }
+          </dl>
+
+          {
+            contacts.length > 0 && (
+              <ul class="store__contacts" role="list">
+                {contacts.map((c) => (
+                  <li>
+                    <a class="btn btn--sm btn--ghost" href={c.href} target="_blank" rel="noopener">
+                      <Icon name={c.icon} size={16} />
+                      {c.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+
+          {store.description && <p class="store__desc">{store.description}</p>}
+
+          <a class="link-arrow store__back" href="/lojas">
+            <Icon name="chevron-left" size={18} /> Ver todas as lojas
+          </a>
+        </aside>
+      </div>
+    </section>
+
+    {
+      related.length > 0 && category && (
+        <section class="section related">
+          <div class="container-site">
+            <h2 class="display-title related__title">
+              Mais em <em>{category.name}</em>
+            </h2>
+            <ul class="related__list" role="list">
+              {related.map((s, i) => (
+                <StoreCard store={s} category={category} index={i} />
+              ))}
+            </ul>
+          </div>
+        </section>
+      )
+    }
+
+    <Footer settings={settings} isHome={false} />
+  </main>
+</Base>
+
+<style>
+  .store__grid {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 1024px) {
+    .store__grid {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: start;
+    }
+  }
+  .store__cover {
+    aspect-ratio: 3 / 2;
+    border-radius: var(--radius-sheet);
+  }
+  .store__logo {
+    position: absolute;
+    left: 1.5rem;
+    bottom: 1.5rem;
+    display: grid;
+    place-items: center;
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 1.5rem;
+    background: var(--color-ink);
+    color: var(--color-on-accent);
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 900;
+    box-shadow: 0 16px 34px -14px rgb(0 0 0 / 0.65);
+    overflow: hidden;
+  }
+  .store__logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 0.5rem;
+  }
+
+  .store__info {
+    display: grid;
+    gap: 1.75rem;
+    padding: clamp(1.5rem, 3vw, 2.25rem);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--color-line);
+  }
+  .store__facts {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .store__facts div {
+    display: grid;
+    gap: 0.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .store__facts dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--tone);
+  }
+  .store__facts dd {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+  .store__contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .store__desc {
+    color: var(--color-ink-soft);
+  }
+  .store__back {
+    justify-self: start;
+    color: var(--color-ink-soft);
+  }
+
+  .related__title {
+    font-size: clamp(2rem, 4vw, 3rem);
+  }
+  .related__list {
+    display: grid;
+    gap: 1rem;
+    margin-top: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  }
+</style>

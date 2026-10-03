@@ -1,0 +1,308 @@
+---
+import Logo from '../brand/Logo.astro';
+import Icon from '../ui/Icon.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import type { SectionData, SiteContent } from '../../lib/content/schema';
+
+interface Props {
+  data: SectionData<'visit'>;
+  anchor: string | null;
+  content: SiteContent;
+}
+
+const { data, anchor, content } = Astro.props;
+const { address, hours } = content.settings;
+const cityLine = [address.district, [address.city, address.state].filter(Boolean).join('/')].filter(Boolean).join(' · ');
+---
+
+<section class="section visit" id={anchor ?? undefined}>
+  <div class="container-site">
+    <SectionHeading eyebrow={data.eyebrow} title={data.title} subtitle={data.subtitle} />
+
+    <div class="visit__grid">
+      <div class="visit__card" data-reveal>
+        <div class="visit__block">
+          <h3 class="visit__label">
+            <Icon name="map-pin" size={18} /> Endereço
+          </h3>
+          <address>
+            <strong>{address.street}</strong>
+            {cityLine && <span>{cityLine}</span>}
+            {address.zip && <span>CEP {address.zip}</span>}
+          </address>
+          <div class="visit__actions">
+            {
+              data.mapsUrl && (
+                <a class="btn btn--sm" href={data.mapsUrl} target="_blank" rel="noopener">
+                  Google Maps <Icon name="arrow-up-right" size={16} />
+                </a>
+              )
+            }
+            {
+              data.wazeUrl && (
+                <a class="btn btn--sm btn--ghost" href={data.wazeUrl} target="_blank" rel="noopener">
+                  Waze <Icon name="arrow-up-right" size={16} />
+                </a>
+              )
+            }
+          </div>
+        </div>
+
+        {
+          hours.length > 0 && (
+            <div class="visit__block">
+              <h3 class="visit__label">
+                <Icon name="clock" size={18} /> Horários
+              </h3>
+              <dl class="visit__hours">
+                {hours.map((h) => (
+                  <div>
+                    <dt>{h.label}</dt>
+                    <dd>{h.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )
+        }
+      </div>
+
+      <div class="visit__map" data-reveal="scale" style="--delay:120ms">
+        {
+          data.mapEmbedUrl ? (
+            <iframe
+              src={data.mapEmbedUrl}
+              title={`Mapa de localização do ${content.settings.name}`}
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen
+            />
+          ) : (
+            <>
+              {data.image && (
+                <img
+                  src={data.image.src}
+                  srcset={data.image.srcset}
+                  sizes="(min-width: 1024px) 55vw, 92vw"
+                  alt={data.image.alt}
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+              <div class="visit__pin" aria-hidden="true">
+                <span class="visit__pin-dot">
+                  <Logo variant="icon" title="" />
+                </span>
+              </div>
+            </>
+          )
+        }
+      </div>
+    </div>
+
+    {
+      data.info.length > 0 && (
+        <ul class="visit__info" role="list">
+          {data.info.map((item, i) => (
+            <li data-reveal style={`--delay:${i * 70}ms`}>
+              <span class="visit__info-icon">
+                <Icon name={item.icon} size={22} />
+              </span>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .visit__grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  }
+  @media (min-width: 1024px) {
+    .visit__grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    }
+  }
+
+  .visit__card {
+    display: grid;
+    gap: 2rem;
+    align-content: start;
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--color-line);
+  }
+  .visit__block + .visit__block {
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-line);
+  }
+  .visit__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-teal);
+  }
+  .visit address {
+    display: grid;
+    gap: 0.25rem;
+    margin-top: 1rem;
+    font-style: normal;
+    color: var(--color-ink-soft);
+  }
+  .visit address strong {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-ink);
+    letter-spacing: -0.02em;
+  }
+  .visit__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+  .visit__hours {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .visit__hours div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed var(--color-line);
+  }
+  .visit__hours dt {
+    color: var(--color-ink-muted);
+  }
+  .visit__hours dd {
+    font-weight: 700;
+  }
+
+  .visit__map {
+    position: relative;
+    min-height: 22rem;
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+  .visit__map iframe,
+  .visit__map img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: cover;
+  }
+  .visit__map img {
+    filter: grayscale(0.25) brightness(0.8);
+  }
+  .visit__map iframe {
+    filter: grayscale(0.3) invert(0.9) hue-rotate(180deg) contrast(0.9);
+  }
+  .visit__pin {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+  }
+  .visit__pin-dot {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 5rem;
+    height: 5rem;
+    border-radius: 50%;
+    background: var(--color-bg);
+    box-shadow: 0 16px 40px -10px rgb(0 0 0 / 0.7);
+  }
+  .visit__pin-dot :global(svg) {
+    height: 2.75rem;
+    width: auto;
+  }
+  .visit__pin-dot::before,
+  .visit__pin-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--color-pink);
+    animation: ripple 2.8s var(--ease-out-expo) infinite;
+  }
+  .visit__pin-dot::after {
+    animation-delay: 1.4s;
+  }
+  @keyframes ripple {
+    from {
+      transform: scale(1);
+      opacity: 0.9;
+    }
+    to {
+      transform: scale(2.6);
+      opacity: 0;
+    }
+  }
+
+  .visit__info {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px) {
+    .visit__info {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 1024px) {
+    .visit__info {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .visit__info li {
+    display: grid;
+    gap: 0.5rem;
+    align-content: start;
+    padding: 1.5rem;
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--color-line);
+  }
+  .visit__info-icon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-bottom: 0.75rem;
+    border-radius: 0.875rem;
+    background: var(--color-pink-soft);
+    color: var(--color-pink);
+  }
+  .visit__info li:nth-child(even) .visit__info-icon {
+    background: var(--color-teal-soft);
+    color: var(--color-teal);
+  }
+  .visit__info h3 {
+    font-size: 1.125rem;
+    font-weight: 800;
+  }
+  .visit__info p {
+    font-size: 0.9375rem;
+    color: var(--color-ink-muted);
+  }
+</style>

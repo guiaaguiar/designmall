@@ -1,0 +1,306 @@
+---
+import Logo from '../brand/Logo.astro';
+import Mosaic from '../brand/Mosaic.astro';
+import Icon from '../ui/Icon.astro';
+import type { Settings } from '../../lib/content/schema';
+
+interface Props {
+  settings: Settings;
+  isHome?: boolean;
+}
+
+const { settings, isHome = true } = Astro.props;
+const { footer, social, hours, address, contact } = settings;
+const resolveHref = (href: string) => (!isHome && href.startsWith('#') ? `/${href}` : href);
+const year = new Date().getFullYear();
+const networkLabel: Record<string, string> = {
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  whatsapp: 'WhatsApp',
+  linkedin: 'LinkedIn',
+};
+---
+
+<footer class="footer">
+  <Mosaic cols={24} rows={1} seed={42} class="footer__band" />
+
+  <div class="container-site footer__main">
+    <div class="footer__brand">
+      <Logo class="footer__logo" />
+      {footer.tagline && <p class="footer__tagline">{footer.tagline}</p>}
+      {
+        social.length > 0 && (
+          <ul class="footer__social" role="list">
+            {social.map((s) => (
+              <li>
+                <a href={s.url} target="_blank" rel="noopener" aria-label={`${settings.name} no ${networkLabel[s.network]}`}>
+                  <Icon name={s.network} size={20} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+
+    {
+      footer.columns.map((col) => (
+        <nav class="footer__col" aria-label={col.title}>
+          <h2 class="footer__heading">{col.title}</h2>
+          <ul role="list">
+            {col.links.map((l) => (
+              <li>
+                <a href={resolveHref(l.href)}>{l.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ))
+    }
+
+    <div class="footer__col">
+      <h2 class="footer__heading">Visite</h2>
+      <address>
+        {address.street}<br />
+        {[address.district, address.city, address.state].filter(Boolean).join(', ')}
+      </address>
+      {
+        hours.length > 0 && (
+          <ul class="footer__hours" role="list">
+            {hours.map((h) => (
+              <li>
+                <span>{h.label}</span>
+                <strong>{h.value}</strong>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+      {contact.phone && <a class="footer__contact" href={`tel:${contact.phone.replace(/\D/g, '')}`}>{contact.phone}</a>}
+    </div>
+  </div>
+
+  <div class="container-site footer__bottom">
+    <p>{footer.copyright.replace('{ano}', String(year))}</p>
+    {footer.credits && <p class="footer__credits">{footer.credits}</p>}
+    <a class="footer__top" href="#" data-back-to-top>
+      Voltar ao topo
+      <Icon name="arrow-up" size={16} />
+    </a>
+  </div>
+</footer>
+
+<a class="to-top" href="#" aria-label="Voltar ao topo" data-back-to-top data-floating-top>
+  <Icon name="arrow-up" size={20} />
+</a>
+
+<style>
+  .footer {
+    position: relative;
+    margin-top: clamp(2rem, 6vw, 4rem);
+    background: var(--color-bg-deep);
+  }
+  .footer :global(.footer__band) {
+    width: 100%;
+  }
+  @media (max-width: 767px) {
+    .footer :global(.footer__band) {
+      grid-template-columns: repeat(12, 1fr);
+    }
+    .footer :global(.footer__band .tile:nth-child(n + 13)) {
+      display: none;
+    }
+  }
+
+  .footer__main {
+    display: grid;
+    gap: 3rem 2rem;
+    padding-block: clamp(3.5rem, 7vw, 5.5rem) 3rem;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 639px) {
+    .footer__brand,
+    .footer__main > .footer__col:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (min-width: 640px) {
+    .footer__main {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 1024px) {
+    .footer__main {
+      grid-template-columns: 1.6fr 1fr 1fr 1.4fr;
+    }
+  }
+
+  .footer :global(.footer__logo) {
+    height: 64px;
+    width: auto;
+  }
+  .footer__tagline {
+    margin-top: 1.25rem;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-ink-soft);
+  }
+  .footer__social {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+  .footer__social a {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: rgb(238 238 238 / 0.08);
+    color: var(--color-ink-soft);
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease,
+      transform 0.4s var(--ease-spring);
+  }
+  .footer__social a:hover {
+    background: var(--color-pink);
+    color: var(--color-on-accent);
+    transform: translateY(-3px);
+  }
+
+  .footer__heading {
+    margin-bottom: 1.25rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-teal);
+  }
+  .footer__col ul {
+    display: grid;
+    gap: 0.25rem;
+  }
+  .footer__col a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    color: var(--color-ink-soft);
+    transition: color 0.2s ease;
+  }
+  .footer__col a:hover {
+    color: var(--color-pink);
+  }
+  .footer__col address {
+    font-style: normal;
+    color: var(--color-ink-soft);
+  }
+  .footer__hours {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+  }
+  .footer__hours li {
+    display: grid;
+    font-size: 0.875rem;
+  }
+  .footer__hours span {
+    color: var(--color-ink-muted);
+  }
+  .footer__contact {
+    margin-top: 0.75rem;
+    font-weight: 700;
+  }
+
+  .footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    padding-block: 1.75rem 2.25rem;
+    border-top: 1px solid var(--color-line);
+    font-size: 0.875rem;
+    color: var(--color-ink-muted);
+  }
+  .footer__top {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+  .footer__top:hover {
+    color: var(--color-pink);
+  }
+
+  .to-top {
+    position: fixed;
+    right: clamp(1rem, 3vw, 2rem);
+    bottom: clamp(1rem, 3vw, 2rem);
+    z-index: 40;
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    background: rgb(55 52 53 / 0.85);
+    backdrop-filter: blur(12px);
+    box-shadow:
+      inset 0 0 0 1px var(--color-line-strong),
+      0 14px 30px -12px rgb(0 0 0 / 0.6);
+    color: var(--color-ink);
+    opacity: 0;
+    transform: translateY(16px) scale(0.9);
+    pointer-events: none;
+    transition:
+      opacity 0.3s ease,
+      transform 0.45s var(--ease-spring),
+      background-color 0.2s ease;
+  }
+  .to-top:global(.is-shown) {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .to-top:hover {
+    background: var(--color-pink);
+    color: var(--color-on-accent);
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLAnchorElement>('[data-back-to-top]').forEach((a) =>
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+      document.querySelector<HTMLElement>('.brand')?.focus({ preventScroll: true });
+    }),
+  );
+
+  const floating = document.querySelector<HTMLElement>('[data-floating-top]');
+  if (floating) {
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const y = window.scrollY;
+      const nearEnd = y > document.documentElement.scrollHeight - window.innerHeight * 1.6;
+      floating.classList.toggle('is-shown', y > window.innerHeight * 1.2 && !nearEnd);
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      },
+      { passive: true },
+    );
+  }
+</script>

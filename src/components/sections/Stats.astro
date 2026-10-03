@@ -1,0 +1,152 @@
+---
+import Mosaic from '../brand/Mosaic.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import { formatNumber } from '../../lib/text';
+import type { SectionData } from '../../lib/content/schema';
+
+interface Props {
+  data: SectionData<'stats'>;
+  anchor: string | null;
+}
+
+const { data, anchor } = Astro.props;
+---
+
+<section class="section stats" id={anchor ?? undefined}>
+  <div class="container-site">
+    <div class="stats__panel" data-reveal="scale">
+      <div class="stats__content">
+        <SectionHeading eyebrow={data.eyebrow} title={data.title} subtitle={data.subtitle} />
+        {data.text && <p class="lead stats__text" data-reveal style="--delay:200ms">{data.text}</p>}
+
+        {
+          data.items.length > 0 && (
+            <ul class="stats__grid" role="list">
+              {data.items.map((item, i) => (
+                <li data-reveal style={`--delay:${240 + i * 80}ms`}>
+                  <strong>
+                    {item.prefix}
+                    <span data-count={item.value}>{formatNumber(item.value)}</span>
+                    {item.suffix}
+                  </strong>
+                  <span>{item.label}</span>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+
+      <div class="stats__art">
+        <Mosaic cols={4} rows={4} seed={11} live class="stats__mosaic" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stats__panel {
+    position: relative;
+    display: grid;
+    gap: 3rem;
+    padding: clamp(2rem, 5vw, 4.5rem);
+    border-radius: var(--radius-sheet);
+    background:
+      radial-gradient(80% 90% at 0% 0%, rgb(107 79 158 / 0.55), transparent 60%),
+      linear-gradient(140deg, #48396f 0%, #3b3058 55%, #332a49 100%);
+    overflow: hidden;
+    isolation: isolate;
+  }
+  @media (min-width: 1024px) {
+    .stats__panel {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      align-items: center;
+    }
+  }
+  .stats__panel :global(.lead) {
+    color: #ddd8e8;
+  }
+  .stats__text {
+    margin-top: 1.25rem;
+  }
+
+  .stats__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem 2rem;
+    margin-top: clamp(2.25rem, 4vw, 3rem);
+    padding-top: 2rem;
+    border-top: 1px solid rgb(238 238 238 / 0.14);
+  }
+  .stats__grid li {
+    display: grid;
+    gap: 0.25rem;
+  }
+  .stats__grid strong {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 6.5vw, 3.5rem);
+    white-space: nowrap;
+    font-weight: 900;
+    letter-spacing: -0.045em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stats__grid li > span {
+    color: #cfc8e0;
+    font-size: 0.9375rem;
+  }
+
+  .stats__art {
+    position: relative;
+  }
+  .stats__panel :global(.stats__mosaic) {
+    width: 100%;
+    max-width: 30rem;
+    margin-inline: auto;
+    border-radius: 2rem;
+    overflow: hidden;
+    box-shadow: 0 30px 70px -30px rgb(0 0 0 / 0.6);
+  }
+</style>
+
+<script>
+  // Contadores: animam do zero até o valor quando aparecem.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const fmt = new Intl.NumberFormat('pt-BR');
+  const counters = Array.from(document.querySelectorAll<HTMLElement>('[data-count]'));
+
+  if (!reduce.matches) {
+    const run = (el: HTMLElement) => {
+      const target = Number(el.dataset.count);
+      const duration = 1600;
+      const start = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 4);
+        el.textContent = fmt.format(Math.round(target * eased));
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          run(entry.target as HTMLElement);
+          io.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.6 },
+    );
+
+    for (const el of counters) {
+      const rect = el.getBoundingClientRect();
+      const inView = rect.top < window.innerHeight && rect.bottom > 0;
+      if (!inView) {
+        el.textContent = fmt.format(0);
+        io.observe(el);
+      }
+    }
+  }
+</script>

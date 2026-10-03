@@ -1,0 +1,132 @@
+---
+/** Seção genérica imagem + texto — use para qualquer conteúdo novo pelo /admin. */
+import Tile from '../brand/Tile.astro';
+import Icon from '../ui/Icon.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import type { SectionData } from '../../lib/content/schema';
+
+interface Props {
+  data: SectionData<'feature'>;
+  anchor: string | null;
+}
+
+const { data, anchor } = Astro.props;
+---
+
+<section class="section feature" id={anchor ?? undefined}>
+  <div class:list={['container-site feature__grid', data.reverse && 'is-reverse']}>
+    {
+      data.image && (
+        <figure class="feature__figure" data-reveal="scale">
+          <div class="feature__img media-frame">
+            <img
+              src={data.image.src}
+              srcset={data.image.srcset}
+              sizes="(min-width: 1024px) 50vw, 92vw"
+              alt={data.image.alt}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <Tile kind="arch" class="feature__tile feature__tile--a" />
+          <Tile kind="triangles" rotate={90} class="feature__tile feature__tile--b" />
+        </figure>
+      )
+    }
+
+    <div class="feature__content">
+      <SectionHeading eyebrow={data.eyebrow} title={data.title} subtitle={data.subtitle} />
+      {data.text && <p class="lead feature__text" data-reveal style="--delay:200ms">{data.text}</p>}
+      {
+        data.bullets.length > 0 && (
+          <ul class="feature__bullets" role="list">
+            {data.bullets.map((b, i) => (
+              <li data-reveal style={`--delay:${260 + i * 70}ms`}>
+                <span class="feature__check">
+                  <Icon name="check" size={16} strokeWidth={3} />
+                </span>
+                {b}
+              </li>
+            ))}
+          </ul>
+        )
+      }
+      {
+        data.cta && (
+          <a class="btn feature__cta" href={data.cta.href} data-reveal style="--delay:420ms">
+            {data.cta.label}
+            <Icon name="arrow-right" size={18} />
+          </a>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .feature__grid {
+    display: grid;
+    gap: clamp(3rem, 6vw, 5rem);
+    align-items: center;
+  }
+  @media (min-width: 1024px) {
+    .feature__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .feature__grid.is-reverse .feature__figure {
+      order: 2;
+    }
+  }
+
+  .feature__figure {
+    position: relative;
+    padding: 0 1.5rem 1.5rem 0;
+  }
+  .feature__img {
+    aspect-ratio: 5 / 4;
+    border-radius: var(--radius-sheet);
+  }
+  .feature :global(.feature__tile) {
+    position: absolute;
+    width: clamp(4.5rem, 9vw, 7rem);
+    border-radius: 1rem;
+    box-shadow: 0 20px 40px -18px rgb(0 0 0 / 0.6);
+  }
+  .feature :global(.feature__tile--a) {
+    right: 0;
+    bottom: 0;
+  }
+  .feature :global(.feature__tile--b) {
+    right: calc(clamp(4.5rem, 9vw, 7rem) + 0.5rem);
+    bottom: 0;
+    width: clamp(3rem, 6vw, 4.5rem);
+  }
+
+  .feature__text {
+    margin-top: 1.5rem;
+  }
+  .feature__bullets {
+    display: grid;
+    gap: 0.875rem;
+    margin-top: 2rem;
+  }
+  .feature__bullets li {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    font-weight: 600;
+  }
+  .feature__check {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    flex: none;
+    border-radius: 50%;
+    background: var(--color-teal-soft);
+    color: var(--color-teal);
+  }
+  .feature__cta {
+    margin-top: 2.25rem;
+  }
+</style>

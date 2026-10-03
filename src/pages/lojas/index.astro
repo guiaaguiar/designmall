@@ -1,0 +1,41 @@
+---
+import Base from '../../layouts/Base.astro';
+import Header from '../../components/layout/Header.astro';
+import Footer from '../../components/layout/Footer.astro';
+import PageIntro from '../../components/layout/PageIntro.astro';
+import StoreGrid from '../../components/stores/StoreGrid.astro';
+import { getSiteContent } from '../../lib/content/repository';
+
+const content = await getSiteContent();
+const { settings, stores, categories } = content;
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+---
+
+<Base
+  settings={settings}
+  title={`Lojas — ${settings.name}`}
+  description={`Conheça as ${stores.length} lojas e serviços do ${settings.name}: moda, gastronomia, bem-estar e muito mais.`}
+>
+  <Header settings={settings} isHome={false} />
+  <main id="conteudo">
+    <PageIntro
+      crumbs={[{ label: 'Início', href: '/' }, { label: 'Lojas' }]}
+      eyebrow="Guia de lojas"
+      title="Todas as marcas, *em um só lugar.*"
+      subtitle="Busque pelo nome ou filtre por experiência para descobrir onde encontrar cada loja."
+    />
+    <section class="section lojas-page">
+      <div class="container-site">
+        <StoreGrid stores={stores} categories={categories} searchable />
+      </div>
+    </section>
+    <Footer settings={settings} isHome={false} />
+  </main>
+</Base>
+
+<style>
+  .lojas-page {
+    padding-top: 1rem;
+  }
+</style>

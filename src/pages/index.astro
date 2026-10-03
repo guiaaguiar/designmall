@@ -1,0 +1,56 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import { sectionComponents } from '../components/sections/registry';
+import { getSiteContent } from '../lib/content/repository';
+
+const content = await getSiteContent();
+const { settings, sections } = content;
+
+// O hero (se for a primeira seção) fica "por baixo"; o restante desliza por cima dele.
+const [first, ...others] = sections;
+const hero = first?.type === 'hero' ? first : null;
+const body = hero ? others : sections;
+const HeroSection = sectionComponents.hero;
+
+// Conteúdo dinâmico: cache curto na borda, sempre revalidado.
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+---
+
+<Base settings={settings}>
+  <Header settings={settings} />
+
+  <main id="conteudo">
+    {hero && <HeroSection data={hero.data} anchor={hero.anchor} content={content} />}
+
+    <div class:list={['sheet', !hero && 'sheet--flat']}>
+      {
+        body.map((section) => {
+          const Component = sectionComponents[section.type];
+          return <Component data={section.data} anchor={section.anchor} content={content} />;
+        })
+      }
+      <Footer settings={settings} />
+    </div>
+  </main>
+</Base>
+
+<style>
+  .sheet {
+    position: relative;
+    z-index: 1;
+    margin-top: calc(-1 * var(--radius-sheet));
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    background: var(--color-bg);
+    box-shadow:
+      0 -1px 0 rgb(238 238 238 / 0.08),
+      0 -30px 60px -20px rgb(0 0 0 / 0.55);
+  }
+  .sheet--flat {
+    margin-top: 0;
+    padding-top: var(--header-h);
+    border-radius: 0;
+    box-shadow: none;
+  }
+</style>

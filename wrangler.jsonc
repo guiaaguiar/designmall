@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "design-mall",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-09-30",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // Banco de conteúdo (textos, ordem das seções, lojas, eventos).
+  // Após `wrangler d1 create design-mall-db`, cole o database_id abaixo.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "design-mall-db",
+      "migrations_dir": "migrations"
+    }
+  ]
+
+  // Futuro /admin — upload de imagens:
+  // "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "design-mall-media" }]
+}

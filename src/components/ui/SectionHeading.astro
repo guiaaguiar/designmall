@@ -1,0 +1,34 @@
+---
+import { richText } from '../../lib/text';
+
+interface Props {
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
+  align?: 'left' | 'center';
+  id?: string;
+  class?: string;
+}
+
+const { eyebrow, title, subtitle, align = 'left', id, class: className = '' } = Astro.props;
+---
+
+<div class:list={['section-heading', `section-heading--${align}`, className]}>
+  {eyebrow && <p class="eyebrow" data-reveal>{eyebrow}</p>}
+  {title && <h2 class="display-title" id={id} data-reveal style="--delay:80ms" set:html={richText(title)} />}
+  {subtitle && <p class="lead" data-reveal style="--delay:160ms">{subtitle}</p>}
+  <slot />
+</div>
+
+<style>
+  .section-heading {
+    display: grid;
+    gap: 1.25rem;
+    max-width: 52rem;
+  }
+  .section-heading--center {
+    margin-inline: auto;
+    text-align: center;
+    justify-items: center;
+  }
+</style>

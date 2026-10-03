@@ -1,0 +1,389 @@
+---
+import Logo from '../brand/Logo.astro';
+import Mosaic from '../brand/Mosaic.astro';
+import Icon from '../ui/Icon.astro';
+import { richText } from '../../lib/text';
+import type { SectionData } from '../../lib/content/schema';
+
+interface Props {
+  data: SectionData<'hero'>;
+  anchor: string | null;
+}
+
+const { data, anchor } = Astro.props;
+const lines = data.title.split('\n');
+---
+
+<section class="hero" id={anchor ?? undefined} aria-labelledby="hero-title" data-hero>
+  <div class="hero__media" aria-hidden="true">
+    {
+      data.image && (
+        <img
+          src={data.image.src}
+          srcset={data.image.srcset}
+          sizes="100vw"
+          alt=""
+          width={data.image.width}
+          height={data.image.height}
+          fetchpriority="high"
+          decoding="async"
+          class:list={[data.imageTone === 'brand' && 'is-toned']}
+        />
+      )
+    }
+    <div class="hero__veil"></div>
+  </div>
+
+  <Mosaic cols={2} rows={6} seed={3} live class="hero__mosaic" />
+
+  <div class="container-site hero__inner">
+    <div class="hero__content">
+      {
+        data.eyebrow && (
+          <p class="hero__eyebrow">
+            <Logo variant="icon" class="hero__eyebrow-icon" title="" />
+            {data.eyebrow}
+          </p>
+        )
+      }
+
+      <h1 class="hero-title" id="hero-title">
+        {
+          lines.map((line, i) => (
+            <span class="hero-title__line">
+              <span class="hero-title__inner" style={`--i:${i}`} set:html={richText(line)} />
+            </span>
+          ))
+        }
+      </h1>
+
+      {data.subtitle && <p class="hero__subtitle">{data.subtitle}</p>}
+
+      {
+        (data.primaryCta || data.secondaryCta) && (
+          <div class="hero__ctas">
+            {data.primaryCta && (
+              <a class="btn" href={data.primaryCta.href}>
+                {data.primaryCta.label}
+                <Icon name="arrow-right" size={18} />
+              </a>
+            )}
+            {data.secondaryCta && (
+              <a class="btn btn--ghost" href={data.secondaryCta.href}>
+                <Icon name="map-pin" size={18} />
+                {data.secondaryCta.label}
+              </a>
+            )}
+          </div>
+        )
+      }
+    </div>
+
+    <div class="hero__bottom">
+      {
+        data.highlights.length > 0 && (
+          <ul class="hero__highlights">
+            {data.highlights.map((h) => (
+              <li>
+                <strong>{h.value}</strong>
+                <span>{h.label}</span>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+      <span class="hero__scroll" aria-hidden="true">
+        <span>{data.scrollLabel}</span>
+        <i></i>
+      </span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    --hero-p: 0;
+    position: relative;
+    z-index: 0;
+    display: flex;
+    min-height: max(100svh, 640px);
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--color-bg-deep);
+  }
+  @media (min-height: 640px) {
+    /* o conteúdo seguinte "desliza" por cima do hero */
+    .hero {
+      position: sticky;
+      top: 0;
+    }
+  }
+
+  .hero__media {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+  .hero__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 40% 60%;
+    transform: scale(calc(1.06 + var(--hero-p) * 0.08));
+    transform-origin: 50% 70%;
+    will-change: transform;
+  }
+  .hero__media img.is-toned {
+    filter: grayscale(1) contrast(1.12) brightness(0.62);
+  }
+  html.js .hero__media img {
+    animation: hero-zoom 2.4s var(--ease-out-expo) backwards;
+  }
+  @keyframes hero-zoom {
+    from {
+      transform: scale(1.18);
+      opacity: 0.2;
+    }
+  }
+  .hero__veil {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(55% 60% at 78% 18%, rgb(240 95 142 / 0.2), transparent 70%),
+      radial-gradient(45% 50% at 10% 90%, rgb(36 175 193 / 0.14), transparent 70%),
+      linear-gradient(98deg, rgb(35 32 33 / 0.94) 0%, rgb(35 32 33 / 0.62) 42%, rgb(35 32 33 / 0.08) 78%),
+      linear-gradient(to top, rgb(35 32 33 / 0.85) 0%, rgb(35 32 33 / 0) 40%);
+  }
+
+  /* coluna de grafismos à direita — como a capa do manual */
+  .hero :global(.hero__mosaic) {
+    position: absolute;
+    top: var(--header-h);
+    right: 0;
+    width: clamp(220px, 21vw, 320px);
+    z-index: 0;
+  }
+
+  .hero__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: clamp(2.5rem, 6vh, 4.5rem);
+    padding-top: calc(var(--header-h) + 2rem);
+    padding-bottom: calc(var(--radius-sheet) + clamp(1.5rem, 4vh, 3rem));
+    transform: translate3d(0, calc(var(--hero-p) * -70px), 0);
+    opacity: calc(1 - var(--hero-p) * 1.4);
+  }
+
+  .hero__content {
+    max-width: 46rem;
+  }
+
+  .hero__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.375rem 1rem 0.375rem 0.5rem;
+    border-radius: 999px;
+    background: rgb(238 238 238 / 0.08);
+    box-shadow: inset 0 0 0 1px var(--color-line);
+    backdrop-filter: blur(8px);
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+  }
+  .hero :global(.hero__eyebrow-icon) {
+    height: 1.375rem;
+    width: auto;
+  }
+
+  .hero-title {
+    margin-top: 1.5rem;
+    font-size: clamp(3.75rem, 12.5vw, 10.5rem);
+    font-weight: 900;
+    line-height: 0.86;
+    letter-spacing: -0.055em;
+  }
+  .hero-title__line {
+    display: block;
+    overflow: clip;
+    padding-bottom: 0.06em;
+    margin-bottom: -0.06em;
+  }
+  .hero-title__inner {
+    display: block;
+  }
+  html.js .hero-title__inner {
+    animation: line-up 1.1s var(--ease-out-expo) backwards;
+    animation-delay: calc(250ms + var(--i) * 110ms);
+  }
+  @keyframes line-up {
+    from {
+      transform: translate3d(0, 105%, 0) rotate(2deg);
+    }
+  }
+
+  .hero__subtitle {
+    margin-top: 1.75rem;
+    max-width: 34rem;
+    font-size: clamp(1.0625rem, 1.5vw, 1.25rem);
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+  }
+
+  .hero__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2.25rem;
+  }
+
+  html.js .hero__eyebrow,
+  html.js .hero__subtitle,
+  html.js .hero__ctas,
+  html.js .hero__bottom {
+    animation: fade-up 1s var(--ease-out-expo) backwards;
+  }
+  html.js .hero__eyebrow {
+    animation-delay: 150ms;
+  }
+  html.js .hero__subtitle {
+    animation-delay: 550ms;
+  }
+  html.js .hero__ctas {
+    animation-delay: 680ms;
+  }
+  html.js .hero__bottom {
+    animation-delay: 850ms;
+  }
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 20px, 0);
+    }
+  }
+
+  .hero__bottom {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--color-line);
+    max-width: calc(100% - clamp(220px, 21vw, 320px));
+  }
+  .hero__highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem clamp(1.5rem, 4vw, 3.5rem);
+  }
+  .hero__highlights li {
+    display: grid;
+    gap: 0.125rem;
+  }
+  .hero__highlights strong {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .hero__highlights span {
+    font-size: 0.875rem;
+    color: var(--color-ink-muted);
+  }
+
+  .hero__scroll {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+    white-space: nowrap;
+  }
+  .hero__scroll i {
+    position: relative;
+    width: 1px;
+    height: 2.75rem;
+    overflow: hidden;
+    background: var(--color-line-strong);
+  }
+  .hero__scroll i::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-pink);
+    animation: scroll-cue 2.2s var(--ease-in-out) infinite;
+  }
+  @keyframes scroll-cue {
+    0% {
+      transform: translateY(-100%);
+    }
+    60%,
+    100% {
+      transform: translateY(100%);
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .hero__bottom {
+      max-width: none;
+    }
+    .hero__scroll {
+      display: none;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .hero :global(.hero__mosaic) {
+      top: calc(var(--header-h) + 0.5rem);
+      width: 38vw;
+      max-width: 180px;
+    }
+    .hero :global(.hero__mosaic .tile:nth-child(n + 5)) {
+      display: none;
+    }
+    .hero__veil {
+      background:
+        radial-gradient(70% 40% at 90% 15%, rgb(240 95 142 / 0.2), transparent 70%),
+        linear-gradient(to top, rgb(35 32 33 / 0.96) 8%, rgb(35 32 33 / 0.55) 60%, rgb(35 32 33 / 0.35) 100%);
+    }
+    .hero__ctas .btn {
+      flex: 1 1 auto;
+    }
+    .hero__highlights {
+      gap: 1.25rem 1.75rem;
+    }
+  }
+</style>
+
+<script>
+  // Parallax suave do hero enquanto o conteúdo sobe por cima dele.
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (hero && !reduce.matches) {
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const p = Math.min(1, Math.max(0, window.scrollY / (hero.offsetHeight * 0.9)));
+      hero.style.setProperty('--hero-p', p.toFixed(3));
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!ticking && window.scrollY < hero.offsetHeight * 1.2) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      },
+      { passive: true },
+    );
+  }
+</script>

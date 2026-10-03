@@ -1,0 +1,44 @@
+---
+import StoreGrid from '../stores/StoreGrid.astro';
+import Icon from '../ui/Icon.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import type { SectionData, SiteContent } from '../../lib/content/schema';
+
+interface Props {
+  data: SectionData<'stores'>;
+  anchor: string | null;
+  content: SiteContent;
+}
+
+const { data, anchor, content } = Astro.props;
+const pool = data.featuredOnly ? content.stores.filter((s) => s.featured) : content.stores;
+const stores = pool.slice(0, data.limit);
+---
+
+<section class="section stores" id={anchor ?? undefined}>
+  <div class="container-site">
+    <div class="stores__head">
+      <SectionHeading eyebrow={data.eyebrow} title={data.title} subtitle={data.subtitle} />
+      {
+        data.cta && (
+          <a class="btn btn--ghost stores__cta" href={data.cta.href} data-reveal>
+            {data.cta.label}
+            <Icon name="arrow-right" size={18} />
+          </a>
+        )
+      }
+    </div>
+
+    <StoreGrid stores={stores} categories={content.categories} showFilters={data.showFilters} allLabel={data.allLabel} />
+  </div>
+</section>
+
+<style>
+  .stores__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem 2rem;
+  }
+</style>

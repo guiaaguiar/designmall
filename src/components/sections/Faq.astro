@@ -1,0 +1,129 @@
+---
+import Icon from '../ui/Icon.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import type { SectionData } from '../../lib/content/schema';
+
+interface Props {
+  data: SectionData<'faq'>;
+  anchor: string | null;
+}
+
+const { data, anchor } = Astro.props;
+const group = `faq-${anchor ?? 'lista'}`;
+---
+
+<section class="section faq" id={anchor ?? undefined}>
+  <div class="container-site faq__grid">
+    <div class="faq__aside">
+      <SectionHeading eyebrow={data.eyebrow} title={data.title} subtitle={data.subtitle} />
+    </div>
+
+    <div class="faq__list">
+      {
+        data.items.map((item, i) => (
+          <details class="faq__item" name={group} data-reveal style={`--delay:${i * 60}ms`}>
+            <summary>
+              <span>{item.question}</span>
+              <span class="faq__icon" aria-hidden="true">
+                <Icon name="plus" size={18} strokeWidth={2.4} />
+              </span>
+            </summary>
+            <div class="faq__answer">
+              <p>{item.answer}</p>
+            </div>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq__grid {
+    display: grid;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+  @media (min-width: 1024px) {
+    .faq__grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-items: start;
+    }
+    .faq__aside {
+      position: sticky;
+      top: 7rem;
+    }
+  }
+
+  .faq__list {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .faq__item {
+    border-radius: 1.25rem;
+    background: var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--color-line);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .faq__item[open] {
+    background: var(--color-surface-2);
+    box-shadow: inset 0 0 0 1px var(--color-line-strong);
+  }
+  .faq__item summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 4rem;
+    padding: 1rem 1rem 1rem 1.5rem;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 700;
+    list-style: none;
+    border-radius: 1.25rem;
+  }
+  .faq__item summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: rgb(238 238 238 / 0.08);
+    transition:
+      transform 0.45s var(--ease-spring),
+      background-color 0.25s ease,
+      color 0.25s ease;
+  }
+  .faq__item summary:hover .faq__icon {
+    background: rgb(238 238 238 / 0.14);
+  }
+  .faq__item[open] .faq__icon {
+    transform: rotate(135deg);
+    background: var(--color-pink);
+    color: var(--color-on-accent);
+  }
+
+  /* animação de altura (Chrome/Edge 131+; nos demais, abre instantâneo) */
+  .faq__item::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 0.45s var(--ease-out-expo),
+      content-visibility 0.45s allow-discrete;
+  }
+  .faq__item[open]::details-content {
+    block-size: auto;
+  }
+  .faq__answer {
+    padding: 0 4.5rem 1.5rem 1.5rem;
+    color: var(--color-ink-soft);
+  }
+  @media (max-width: 639px) {
+    .faq__answer {
+      padding-right: 1.5rem;
+    }
+  }
+</style>

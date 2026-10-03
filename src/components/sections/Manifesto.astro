@@ -1,0 +1,192 @@
+---
+import Logo from '../brand/Logo.astro';
+import Tile from '../brand/Tile.astro';
+import { plainText, splitWords } from '../../lib/text';
+import type { SectionData } from '../../lib/content/schema';
+
+interface Props {
+  data: SectionData<'manifesto'>;
+  anchor: string | null;
+}
+
+const { data, anchor } = Astro.props;
+const words = splitWords(data.text);
+---
+
+<section class="section manifesto" id={anchor ?? undefined} aria-labelledby={anchor ? `${anchor}-title` : undefined}>
+  <div class="container-site manifesto__grid">
+    <div class="manifesto__aside">
+      {data.eyebrow && <h2 class="eyebrow" id={anchor ? `${anchor}-title` : undefined} data-reveal>{data.eyebrow}</h2>}
+      {
+        data.image && (
+          <figure class="manifesto__figure" data-reveal="scale" style="--delay:120ms">
+            <div class="manifesto__img media-frame">
+              <img
+                src={data.image.src}
+                srcset={data.image.srcset}
+                sizes="(min-width: 1024px) 30vw, 90vw"
+                alt={data.image.alt}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <Tile kind="quarter" rotate={90} class="manifesto__corner" />
+            {data.caption && <figcaption>{data.caption}</figcaption>}
+          </figure>
+        )
+      }
+    </div>
+
+    <div class="manifesto__body">
+      <p class="manifesto__text" data-manifesto style={`--n:${words.length}`}>
+        <span class="visually-hidden">{plainText(data.text)}</span>
+        <span aria-hidden="true">
+          {
+            words.map((w, i) => (
+              <>
+                {i > 0 && !w.glue && ' '}
+                <span class:list={['w', w.strong && 'is-strong']} style={`--i:${i}`}>
+                  {w.text}
+                </span>
+              </>
+            ))
+          }
+        </span>
+      </p>
+
+      {
+        data.signature && (
+          <p class="manifesto__signature" data-reveal>
+            <Logo variant="icon" class="manifesto__sig-icon" title="" />
+            <span>{data.signature}</span>
+          </p>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .manifesto__grid {
+    display: grid;
+    gap: clamp(3rem, 6vw, 6rem);
+  }
+  @media (min-width: 1024px) {
+    .manifesto__grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 8fr);
+      align-items: start;
+    }
+    .manifesto__aside {
+      position: sticky;
+      top: 7rem;
+    }
+  }
+
+  .manifesto__aside {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .manifesto__figure {
+    position: relative;
+    max-width: 26rem;
+  }
+  .manifesto__img {
+    aspect-ratio: 4 / 5;
+    border-radius: var(--radius-card) var(--radius-card) var(--radius-card) 0.5rem;
+  }
+  .manifesto :global(.manifesto__corner) {
+    position: absolute;
+    right: -1.25rem;
+    top: -1.25rem;
+    width: 5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 16px 40px -16px rgb(0 0 0 / 0.6);
+  }
+  .manifesto__figure figcaption {
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: var(--color-ink-muted);
+  }
+
+  .manifesto__text {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 3.6vw, 3.25rem);
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -0.025em;
+  }
+  .w {
+    opacity: clamp(0.16, calc(var(--p, 1) * (var(--n) + 6) - var(--i)), 1);
+    transition: opacity 0.25s linear;
+  }
+  .w.is-strong {
+    color: var(--color-pink);
+  }
+  html.js .manifesto__text {
+    --p: 0;
+  }
+
+  .manifesto__signature {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    padding: 1rem 1.5rem 1rem 1rem;
+    border-radius: 999px;
+    background: var(--color-surface);
+    font-family: var(--font-display);
+    font-size: clamp(1.125rem, 1.6vw, 1.375rem);
+    font-weight: 700;
+  }
+  .manifesto :global(.manifesto__sig-icon) {
+    height: 2.5rem;
+    width: auto;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.js .manifesto__text {
+      --p: 1;
+    }
+  }
+</style>
+
+<script>
+  // Acende as palavras conforme o parágrafo atravessa a tela.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  document.querySelectorAll<HTMLElement>('[data-manifesto]').forEach((el) => {
+    if (reduce.matches) return;
+    let ticking = false;
+    let active = false;
+    const update = () => {
+      ticking = false;
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const start = vh * 0.85;
+      const end = vh * 0.3;
+      const p = (start - rect.top) / (start - end + rect.height * 0.6);
+      el.style.setProperty('--p', Math.min(1, Math.max(0, p)).toFixed(3));
+    };
+    const onScroll = () => {
+      if (active && !ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    new IntersectionObserver(([entry]) => {
+      active = entry.isIntersecting;
+      if (active) update();
+    }).observe(el);
+    window.addEventListener('scroll', onScroll, { passive: true });
+  });
+</script>

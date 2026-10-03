@@ -1,0 +1,412 @@
+@import 'tailwindcss';
+
+/* =====================================================================
+   DESIGN MALL — Design tokens
+   Cores oficiais do Manual de Identidade (pág. 11):
+   Institucional 01 #EEEEEE · Institucional 02 #F05F8E
+   Opcional 01 #6B4F9E · Opcional 02 #48396F · Opcional 03 #24AFC1
+   Opcional 04 #373435 (cinza da marca — base do tema escuro)
+   ===================================================================== */
+
+@theme {
+  /* Superfícies — derivadas do cinza da marca (Opcional 04) */
+  --color-bg: #2b2829;
+  --color-bg-deep: #232021;
+  --color-surface: #373435;
+  --color-surface-2: #423e40;
+  --color-surface-3: #4d494b;
+  --color-line: rgb(238 238 238 / 0.1);
+  --color-line-strong: rgb(238 238 238 / 0.18);
+
+  /* Texto */
+  --color-ink: #eeeeee;
+  --color-ink-soft: #d0cdce;
+  --color-ink-muted: #a8a4a6;
+  --color-on-accent: #221f20;
+
+  /* Marca */
+  --color-pink: #f05f8e;
+  --color-teal: #24afc1;
+  --color-violet: #6b4f9e;
+  --color-purple: #48396f;
+  --color-pink-soft: rgb(240 95 142 / 0.14);
+  --color-teal-soft: rgb(36 175 193 / 0.14);
+  --color-violet-soft: rgb(107 79 158 / 0.22);
+
+  /* Tipografia — Noah/Trenda são as fontes da marca (licenciadas).
+     Enquanto os arquivos não forem adicionados em /public/fonts, usamos
+     Red Hat Display/Text, geométricas de desenho muito próximo. */
+  --font-display: 'Noah', 'Red Hat Display Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Trenda', 'Red Hat Text Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* Movimento */
+  --ease-spring: cubic-bezier(0.34, 1.32, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --radius-card: 1.75rem;
+  --radius-sheet: 2.75rem;
+}
+
+/* =====================================================================
+   Base
+   ===================================================================== */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    interpolate-size: allow-keywords;
+    --header-h: 84px;
+    --gutter: clamp(1.25rem, 4vw, 3rem);
+  }
+
+  html {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+    scroll-padding-top: 96px;
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--color-bg);
+    font-size: 1rem;
+    line-height: 1.6;
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a,
+  button,
+  [role='button'],
+  summary,
+  label[for] {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-teal);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: var(--color-pink);
+    color: var(--color-on-accent);
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* =====================================================================
+   Componentes utilitários
+   ===================================================================== */
+
+@layer components {
+  .container-site {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  .section {
+    position: relative;
+    padding-block: clamp(4.5rem, 8vw, 7rem);
+  }
+
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 100;
+    padding: 0.75rem 1rem;
+    border-radius: 999px;
+    background: var(--color-pink);
+    color: var(--color-on-accent);
+    font-weight: 700;
+    transform: translateY(-150%);
+    transition: transform 0.2s var(--ease-out-expo);
+  }
+  .skip-link:focus-visible {
+    transform: none;
+  }
+
+  /* Eyebrow: rótulo de seção com marcador geométrico */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-teal);
+  }
+  .eyebrow::before {
+    content: '';
+    width: 0.75rem;
+    height: 0.75rem;
+    flex: none;
+    border-radius: 0.75rem 0.75rem 0 0;
+    background: currentColor;
+  }
+
+  .display-title {
+    font-size: clamp(2.375rem, 5.6vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 0.98;
+  }
+  .display-title em,
+  .hero-title em {
+    font-style: normal;
+    color: var(--color-pink);
+  }
+
+  .lead {
+    font-size: clamp(1.0625rem, 1.4vw, 1.25rem);
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+    max-width: 58ch;
+  }
+
+  /* Botões */
+  .btn {
+    --btn-bg: var(--color-pink);
+    --btn-fg: var(--color-on-accent);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    min-height: 3.25rem;
+    padding: 0 1.5rem;
+    border-radius: 999px;
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    isolation: isolate;
+    overflow: hidden;
+    transition:
+      transform 0.35s var(--ease-spring),
+      box-shadow 0.3s ease,
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .btn .icon {
+    transition: transform 0.35s var(--ease-spring);
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px -14px color-mix(in srgb, var(--btn-bg) 75%, transparent);
+  }
+  .btn:hover .icon {
+    transform: translateX(3px);
+  }
+  .btn:active {
+    transform: translateY(0) scale(0.97);
+  }
+  .btn--ghost {
+    --btn-bg: rgb(238 238 238 / 0.08);
+    --btn-fg: var(--color-ink);
+    box-shadow: inset 0 0 0 1px var(--color-line-strong);
+    backdrop-filter: blur(10px);
+  }
+  .btn--ghost:hover {
+    --btn-bg: rgb(238 238 238 / 0.14);
+    box-shadow: inset 0 0 0 1px rgb(238 238 238 / 0.3);
+  }
+  .btn--light {
+    --btn-bg: var(--color-ink);
+    --btn-fg: var(--color-on-accent);
+  }
+  .btn--sm {
+    min-height: 2.75rem;
+    padding: 0 1.125rem;
+    font-size: 0.9375rem;
+  }
+
+  .link-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.3em;
+    transition: text-decoration-color 0.2s ease, color 0.2s ease;
+  }
+  .link-arrow:hover {
+    text-decoration-color: currentColor;
+  }
+  .link-arrow .icon {
+    transition: transform 0.35s var(--ease-spring);
+  }
+  .link-arrow:hover .icon {
+    transform: translate(2px, -2px);
+  }
+
+  /* Chips / tags */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 1.75rem;
+    padding: 0 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    background: rgb(238 238 238 / 0.08);
+    color: var(--color-ink-soft);
+  }
+
+  /* Tons da marca aplicáveis a qualquer componente: data-tone="pink|teal|violet|purple" */
+  [data-tone='pink'] {
+    --tone: var(--color-pink);
+    --tone-soft: var(--color-pink-soft);
+  }
+  [data-tone='teal'] {
+    --tone: var(--color-teal);
+    --tone-soft: var(--color-teal-soft);
+  }
+  [data-tone='violet'],
+  [data-tone='purple'] {
+    --tone: #9d84cf;
+    --tone-soft: var(--color-violet-soft);
+  }
+  [data-tone='light'] {
+    --tone: var(--color-ink);
+    --tone-soft: rgb(238 238 238 / 0.1);
+  }
+
+  /* ---------------------------------------------------------------
+     Grafismos
+     --------------------------------------------------------------- */
+  .tile {
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    transform: rotate(var(--r, 0deg));
+    transition: transform 0.9s var(--ease-spring);
+  }
+  .tile svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .mosaic {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), 1fr);
+    grid-auto-rows: auto;
+  }
+  .mosaic .tile {
+    opacity: 1;
+  }
+  html.js .mosaic:not(.is-in) .tile {
+    opacity: 0;
+    transform: rotate(calc(var(--r, 0deg) - 90deg)) scale(0.4);
+  }
+  html.js .mosaic .tile {
+    transition:
+      transform 0.9s var(--ease-spring) calc(var(--i, 0) * 45ms),
+      opacity 0.5s ease calc(var(--i, 0) * 45ms);
+  }
+
+  /* ---------------------------------------------------------------
+     Revelar ao rolar — [data-reveal] (só esconde se houver JS)
+     --------------------------------------------------------------- */
+  html.js [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0);
+    transition:
+      opacity 0.8s var(--ease-out-expo) var(--delay, 0ms),
+      transform 0.9s var(--ease-out-expo) var(--delay, 0ms);
+  }
+  html.js [data-reveal='scale'] {
+    transform: scale(0.94);
+  }
+  html.js [data-reveal='left'] {
+    transform: translate3d(-32px, 0, 0);
+  }
+  html.js [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Imagem placeholder (quando loja/evento ainda não tem foto) */
+  .media-frame {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+  .media-frame > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* =====================================================================
+   Acessibilidade de movimento
+   ===================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+  html.js [data-reveal],
+  html.js .mosaic:not(.is-in) .tile {
+    opacity: 1;
+    transform: none;
+  }
+}

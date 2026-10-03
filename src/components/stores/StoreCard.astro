@@ -1,0 +1,203 @@
+---
+import StoreCover from './StoreCover.astro';
+import Icon from '../ui/Icon.astro';
+import { initials } from '../../lib/text';
+import type { Category, Store } from '../../lib/content/schema';
+
+interface Props {
+  store: Store;
+  category?: Category;
+  index?: number;
+}
+
+const { store, category, index = 0 } = Astro.props;
+const tone = category?.tone ?? 'pink';
+const searchText = [store.name, category?.name, store.floor, ...store.tags]
+  .filter(Boolean)
+  .join(' ')
+  .normalize('NFD')
+  .replace(/[̀-ͯ]/g, '')
+  .toLowerCase();
+---
+
+<li
+  class="store-card"
+  data-tone={tone}
+  data-category={category?.slug ?? ''}
+  data-search={searchText}
+  data-reveal
+  style={`--delay:${(index % 4) * 70}ms; view-transition-name: loja-${store.slug}`}
+>
+  <a class="store-card__link" href={`/lojas/${store.slug}`}>
+    <div class="store-card__cover media-frame">
+      {
+        store.coverUrl ? (
+          <img src={store.coverUrl} alt="" loading="lazy" decoding="async" />
+        ) : (
+          <StoreCover seed={store.slug} />
+        )
+      }
+      <span class="store-card__logo" aria-hidden="true">
+        {store.logoUrl ? <img src={store.logoUrl} alt="" loading="lazy" /> : initials(store.name)}
+      </span>
+      {store.featured && <span class="store-card__badge">Destaque</span>}
+    </div>
+
+    <div class="store-card__body">
+      <h3 class="store-card__name">{store.name}</h3>
+      <p class="store-card__meta">
+        {category && <span class="store-card__cat">{category.name}</span>}
+        {
+          store.floor && (
+            <span class="store-card__floor">
+              <Icon name="map-pin" size={14} />
+              {store.floor}
+              {store.unit && ` · ${store.unit}`}
+            </span>
+          )
+        }
+      </p>
+      {store.shortDescription && <p class="store-card__desc">{store.shortDescription}</p>}
+    </div>
+    <span class="store-card__go" aria-hidden="true">
+      <Icon name="arrow-up-right" size={18} />
+    </span>
+  </a>
+</li>
+
+<style>
+  .store-card {
+    display: flex;
+  }
+  .store-card[hidden] {
+    display: none;
+  }
+  .store-card__link {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--color-line);
+    overflow: hidden;
+    transition:
+      transform 0.5s var(--ease-spring),
+      box-shadow 0.3s ease;
+  }
+  .store-card__link:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--tone) 50%, transparent),
+      0 24px 44px -26px color-mix(in srgb, var(--tone) 55%, transparent);
+  }
+
+  .store-card__cover {
+    aspect-ratio: 3 / 2;
+    margin: 0.5rem 0.5rem 0;
+    border-radius: calc(var(--radius-card) - 0.5rem);
+  }
+  .store-card__cover > img,
+  .store-card__cover :global(.store-cover) {
+    transition: transform 0.8s var(--ease-out-expo);
+  }
+  .store-card__link:hover .store-card__cover > img,
+  .store-card__link:hover .store-card__cover :global(.store-cover) {
+    transform: scale(1.06);
+  }
+
+  .store-card__logo {
+    position: absolute;
+    left: 0.875rem;
+    bottom: 0.875rem;
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 1rem;
+    background: var(--color-ink);
+    color: var(--color-on-accent);
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    box-shadow: 0 10px 24px -10px rgb(0 0 0 / 0.6);
+    overflow: hidden;
+  }
+  .store-card__logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 0.375rem;
+  }
+  .store-card__badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 999px;
+    background: rgb(35 32 33 / 0.78);
+    backdrop-filter: blur(8px);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--color-ink);
+  }
+
+  .store-card__body {
+    display: grid;
+    gap: 0.5rem;
+    padding: 1.125rem 1.25rem 1.375rem;
+    padding-right: 3.5rem;
+  }
+  .store-card__name {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .store-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--color-ink-muted);
+  }
+  .store-card__cat {
+    color: var(--tone);
+    font-weight: 700;
+  }
+  .store-card__floor {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .store-card__desc {
+    font-size: 0.9375rem;
+    color: var(--color-ink-soft);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .store-card__go {
+    position: absolute;
+    right: 1rem;
+    bottom: 1.25rem;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: rgb(238 238 238 / 0.08);
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease,
+      transform 0.45s var(--ease-spring);
+  }
+  .store-card__link:hover .store-card__go {
+    background: var(--tone);
+    color: var(--color-on-accent);
+    transform: rotate(45deg);
+  }
+</style>

@@ -1,0 +1,50 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import Mosaic from '../components/brand/Mosaic.astro';
+import Icon from '../components/ui/Icon.astro';
+import { getSiteContent } from '../lib/content/repository';
+
+const { settings } = await getSiteContent();
+Astro.response.status = 404;
+---
+
+<Base settings={settings} title={`Página não encontrada — ${settings.name}`}>
+  <Header settings={settings} isHome={false} />
+  <main id="conteudo" class="not-found">
+    <div class="container-site not-found__inner">
+      <Mosaic cols={3} rows={1} seed={404} live class="not-found__mosaic" />
+      <p class="eyebrow">Erro 404</p>
+      <h1 class="display-title">Esse presente <em>ainda não chegou.</em></h1>
+      <p class="lead">A página que você procura não existe ou mudou de endereço. Que tal começar pelo início?</p>
+      <div class="not-found__ctas">
+        <a class="btn" href="/">Voltar ao início <Icon name="arrow-right" size={18} /></a>
+        <a class="btn btn--ghost" href="/lojas">Ver lojas</a>
+      </div>
+    </div>
+  </main>
+  <Footer settings={settings} isHome={false} />
+</Base>
+
+<style>
+  .not-found__inner {
+    display: grid;
+    justify-items: start;
+    gap: 1.25rem;
+    padding-top: calc(var(--header-h) + 4rem);
+    padding-bottom: 6rem;
+  }
+  .not-found :global(.not-found__mosaic) {
+    width: min(18rem, 60vw);
+    border-radius: 1rem;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  .not-found__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+</style>

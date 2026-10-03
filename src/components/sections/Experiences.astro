@@ -1,0 +1,276 @@
+---
+import Mosaic from '../brand/Mosaic.astro';
+import Tile from '../brand/Tile.astro';
+import { tileKinds } from '../brand/tiles';
+import Icon from '../ui/Icon.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import type { SectionData, SiteContent } from '../../lib/content/schema';
+
+interface Props {
+  data: SectionData<'experiences'>;
+  anchor: string | null;
+  content: SiteContent;
+}
+
+const { data, anchor, content } = Astro.props;
+const storeCount = content.stores.length;
+---
+
+<section class="section experiences" id={anchor ?? undefined}>
+  <div class="container-site">
+    <SectionHeading eyebrow={data.eyebrow} title={data.title} subtitle={data.subtitle} />
+
+    <ul class="bento" role="list">
+      {
+        data.items.map((item, i) => (
+          <li class="bento__item" data-reveal="scale" style={`--delay:${i * 70}ms`}>
+            <a
+              class="xp-card"
+              data-tone={item.tone}
+              href={item.href ?? '#lojas'}
+              data-filter-link={item.category}
+            >
+              {i === 0 ? (
+                <Mosaic cols={4} rows={3} seed={5} live class="xp-card__mosaic" />
+              ) : (
+                <Tile kind={tileKinds[(i * 2) % tileKinds.length]} rotate={(i % 4) * 90} class="xp-card__tile" />
+              )}
+              <span class="xp-card__icon">
+                <Icon name={item.icon} size={22} />
+              </span>
+              <div class="xp-card__text">
+                <h3>{item.title}</h3>
+                {item.description && <p>{item.description}</p>}
+              </div>
+              <span class="xp-card__arrow">
+                <Icon name="arrow-up-right" size={20} />
+              </span>
+            </a>
+          </li>
+        ))
+      }
+      <li class="bento__item bento__item--cta" data-reveal="scale" style={`--delay:${data.items.length * 70}ms`}>
+        <a class="xp-cta" href="#lojas">
+          <span class="xp-cta__count">{storeCount}+</span>
+          <span class="xp-cta__side">
+            <span class="xp-cta__label">marcas esperando por você</span>
+            <span class="xp-cta__link">
+              Ver lojas <Icon name="arrow-right" size={18} />
+            </span>
+          </span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<style>
+  .bento {
+    display: grid;
+    gap: 1rem;
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px) {
+    .bento {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .bento__item:first-child,
+    .bento__item--cta {
+      grid-column: span 2;
+    }
+  }
+  @media (min-width: 1024px) {
+    .bento {
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: minmax(15.5rem, auto);
+    }
+    .bento__item:first-child {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+    .bento__item:nth-child(6) {
+      grid-column: span 2;
+    }
+    .bento__item--cta {
+      grid-column: span 2;
+    }
+  }
+
+  .bento__item {
+    display: flex;
+  }
+
+  .xp-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 15rem;
+    padding: 1.5rem;
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--color-line);
+    overflow: hidden;
+    isolation: isolate;
+    transition:
+      transform 0.5s var(--ease-spring),
+      box-shadow 0.3s ease,
+      background-color 0.3s ease;
+  }
+  .xp-card:hover {
+    transform: translateY(-4px);
+    background: var(--color-surface-2);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--tone) 55%, transparent),
+      0 24px 48px -28px color-mix(in srgb, var(--tone) 60%, transparent);
+  }
+
+  .xp-card :global(.xp-card__tile) {
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    width: 5.5rem;
+    border-bottom-left-radius: 1.25rem;
+    opacity: 0.9;
+    z-index: -1;
+  }
+  .xp-card:hover :global(.xp-card__tile) {
+    transform: rotate(calc(var(--r) + 90deg));
+  }
+  .xp-card :global(.xp-card__mosaic) {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: min(72%, 27rem);
+    border-bottom-left-radius: 2rem;
+    overflow: hidden;
+    z-index: -1;
+  }
+
+  .xp-card__icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 1rem;
+    background: var(--tone-soft);
+    color: var(--tone);
+  }
+  .xp-card__text {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 2.5rem;
+    padding-right: 2.75rem;
+  }
+  .xp-card h3 {
+    font-size: clamp(1.375rem, 2vw, 1.625rem);
+    font-weight: 800;
+  }
+  .xp-card p {
+    color: var(--color-ink-muted);
+    max-width: 30ch;
+  }
+  .xp-card__arrow {
+    position: absolute;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: rgb(238 238 238 / 0.08);
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease,
+      transform 0.45s var(--ease-spring);
+  }
+  .xp-card:hover .xp-card__arrow {
+    background: var(--tone);
+    color: var(--color-on-accent);
+    transform: rotate(45deg);
+  }
+
+  .bento__item:first-child .xp-card {
+    min-height: 30rem;
+  }
+  @media (max-width: 639px) {
+    /* no celular o mosaico vira uma faixa no topo do card */
+    .bento__item:first-child .xp-card {
+      min-height: 0;
+    }
+    .bento__item:first-child .xp-card :global(.xp-card__mosaic) {
+      position: relative;
+      width: calc(100% + 3rem);
+      max-width: none;
+      margin: -1.5rem -1.5rem 1.5rem;
+      border-radius: 0;
+    }
+    .bento__item:first-child .xp-card__text {
+      padding-top: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .bento__item:first-child .xp-card {
+      padding: 2.25rem;
+    }
+    .bento__item:first-child .xp-card h3 {
+      font-size: clamp(2rem, 3.2vw, 3rem);
+    }
+    .bento__item:first-child .xp-card p {
+      font-size: 1.125rem;
+    }
+  }
+
+  .xp-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.25rem 2rem;
+    width: 100%;
+    min-height: 15rem;
+    padding: 1.75rem;
+    border-radius: var(--radius-card);
+    background: var(--color-pink);
+    color: var(--color-on-accent);
+    overflow: hidden;
+    transition: transform 0.5s var(--ease-spring), box-shadow 0.3s ease;
+  }
+  .xp-cta:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 26px 50px -26px rgb(240 95 142 / 0.75);
+  }
+  .xp-cta__count {
+    font-family: var(--font-display);
+    font-size: clamp(3.5rem, 7vw, 5.5rem);
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+  }
+  .xp-cta__label {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    max-width: 16ch;
+  }
+  .xp-cta__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+  }
+  .xp-cta__link :global(.icon) {
+    transition: transform 0.4s var(--ease-spring);
+  }
+  .xp-cta:hover .xp-cta__link :global(.icon) {
+    transform: translateX(4px);
+  }
+  .xp-cta__side {
+    display: grid;
+    gap: 0.75rem;
+    justify-items: start;
+  }
+</style>

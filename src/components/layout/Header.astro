@@ -1,0 +1,477 @@
+---
+/**
+ * Cabeçalho que se transforma:
+ *  - no topo: barra 100% da largura, transparente sobre o hero
+ *  - ao primeiro scroll: vira uma "bolha" flutuante (pill) com vidro fosco
+ * A transição usa uma curva com leve overshoot (efeito mola).
+ */
+import Logo from '../brand/Logo.astro';
+import Mosaic from '../brand/Mosaic.astro';
+import Icon from '../ui/Icon.astro';
+import type { Settings } from '../../lib/content/schema';
+
+interface Props {
+  settings: Settings;
+  /** em páginas internas, links "#secao" passam a apontar para "/#secao" */
+  isHome?: boolean;
+}
+
+const { settings, isHome = true } = Astro.props;
+const resolveHref = (href: string) => (!isHome && href.startsWith('#') ? `/${href}` : href);
+const nav = settings.nav.map((l) => ({ ...l, href: resolveHref(l.href) }));
+const cta = settings.headerCta ? { ...settings.headerCta, href: resolveHref(settings.headerCta.href) } : null;
+---
+
+<header class="site-header" data-header>
+  <div class="shell">
+    <a class="brand" href={isHome ? '#inicio' : '/'} aria-label={`${settings.name} — página inicial`}>
+      <Logo class="brand__logo" />
+    </a>
+
+    <nav class="nav" aria-label="Principal">
+      <ul>
+        {
+          nav.map((link) => (
+            <li>
+              <a href={link.href} data-nav-link>
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="actions">
+      {
+        cta && (
+          <a class="btn btn--sm cta" href={cta.href}>
+            {cta.label}
+          </a>
+        )
+      }
+      <button
+        class="menu-btn"
+        type="button"
+        aria-label="Abrir menu"
+        aria-haspopup="dialog"
+        aria-controls="menu-mobile"
+        aria-expanded="false"
+        data-menu-open
+      >
+        <Icon name="menu" size={22} />
+      </button>
+    </div>
+
+    <span class="progress" aria-hidden="true"></span>
+  </div>
+</header>
+
+<dialog class="mobile-menu" id="menu-mobile" aria-label="Menu" data-menu>
+  <div class="mobile-menu__top">
+    <Logo class="mobile-menu__logo" />
+    <button class="menu-btn" type="button" aria-label="Fechar menu" data-menu-close>
+      <Icon name="x" size={22} />
+    </button>
+  </div>
+
+  <nav aria-label="Menu principal (celular)">
+    <ul class="mobile-menu__links">
+      {
+        nav.map((link, i) => (
+          <li style={`--i:${i}`}>
+            <a href={link.href} data-menu-link>
+              <span>{link.label}</span>
+              <Icon name="arrow-up-right" size={22} />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  <div class="mobile-menu__footer">
+    {
+      cta && (
+        <a class="btn" href={cta.href} data-menu-link>
+          {cta.label}
+          <Icon name="arrow-right" size={18} />
+        </a>
+      )
+    }
+    {
+      settings.hours[0] && (
+        <p class="mobile-menu__hours">
+          <Icon name="clock" size={16} />
+          {settings.hours[0].label}: {settings.hours[0].value}
+        </p>
+      )
+    }
+  </div>
+
+  <Mosaic cols={6} rows={1} seed={21} class="mobile-menu__mosaic" />
+</dialog>
+
+<style>
+  .site-header {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 50;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  /* véu escuro no topo para garantir leitura sobre a foto do hero */
+  .site-header::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 140px;
+    background: linear-gradient(to bottom, rgb(35 32 33 / 0.72), rgb(35 32 33 / 0));
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  .shell {
+    position: relative;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 100%;
+    height: var(--header-h);
+    margin-top: 0;
+    /* no topo, alinha com o container do conteúdo */
+    padding: 0 max(var(--gutter), calc((100% - 1280px) / 2 + var(--gutter)));
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    transition:
+      max-width 0.65s var(--ease-spring),
+      height 0.45s var(--ease-spring),
+      margin-top 0.45s var(--ease-out-expo),
+      padding 0.45s var(--ease-out-expo),
+      border-radius 0.45s var(--ease-out-expo),
+      background-color 0.35s ease,
+      border-color 0.35s ease,
+      box-shadow 0.45s ease;
+  }
+
+  .brand {
+    display: block;
+    flex: none;
+    border-radius: 8px;
+  }
+  .brand :global(.brand__logo) {
+    display: block;
+    height: 46px;
+    width: auto;
+    transition: height 0.45s var(--ease-spring);
+  }
+  .brand:hover :global(.logo__x) {
+    transform: rotate(90deg);
+  }
+  .brand :global(.logo__x) {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 0.6s var(--ease-spring);
+  }
+
+  .nav ul {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .nav a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0 1rem;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    transition: color 0.2s ease, background-color 0.2s ease;
+  }
+  .nav a:hover {
+    color: var(--color-ink);
+    background: rgb(238 238 238 / 0.07);
+  }
+  .nav a::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    width: 5px;
+    height: 5px;
+    margin-left: -2.5px;
+    border-radius: 50%;
+    background: var(--color-pink);
+    transform: scale(0);
+    transition: transform 0.4s var(--ease-spring);
+  }
+  .nav a[aria-current='true'] {
+    color: var(--color-ink);
+  }
+  .nav a[aria-current='true']::after {
+    transform: scale(1);
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: none;
+  }
+
+  .menu-btn {
+    display: none;
+    place-items: center;
+    width: 2.875rem;
+    height: 2.875rem;
+    border-radius: 50%;
+    color: var(--color-ink);
+    background: rgb(238 238 238 / 0.1);
+    transition: background-color 0.2s ease, transform 0.3s var(--ease-spring);
+  }
+  .menu-btn:hover {
+    background: rgb(238 238 238 / 0.18);
+  }
+  .menu-btn:active {
+    transform: scale(0.94);
+  }
+
+  .progress {
+    position: absolute;
+    left: 28px;
+    right: 28px;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--color-pink), var(--color-teal));
+    transform: scaleX(var(--progress, 0));
+    transform-origin: 0 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  /* ----------------------------- estado flutuante ----------------------------- */
+  .site-header:global(.is-floating)::before {
+    opacity: 0;
+  }
+  .site-header:global(.is-floating) .shell {
+    max-width: min(1080px, calc(100% - 24px));
+    height: 64px;
+    margin-top: 12px;
+    padding: 0 9px 0 22px;
+    border-radius: 32px;
+    border-color: rgb(238 238 238 / 0.09);
+    background-color: rgb(55 52 53 / 0.78);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    backdrop-filter: blur(18px) saturate(160%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      0 18px 44px -18px rgb(0 0 0 / 0.65);
+  }
+  .site-header:global(.is-floating) .brand :global(.brand__logo) {
+    height: 36px;
+  }
+  .site-header:global(.is-floating) .progress {
+    opacity: 1;
+  }
+
+  @media (max-width: 1023px) {
+    .nav {
+      display: none;
+    }
+    .menu-btn {
+      display: grid;
+    }
+  }
+  @media (max-width: 639px) {
+    .cta {
+      display: none;
+    }
+    .brand :global(.brand__logo) {
+      height: 38px;
+    }
+    .site-header:global(.is-floating) .shell {
+      height: 58px;
+      margin-top: 10px;
+      padding: 0 7px 0 18px;
+      border-radius: 29px;
+    }
+    .site-header:global(.is-floating) .brand :global(.brand__logo) {
+      height: 32px;
+    }
+  }
+
+  /* --------------------------------- menu mobile --------------------------------- */
+  .mobile-menu {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: none;
+    flex-direction: column;
+    background: var(--color-bg-deep);
+    color: var(--color-ink);
+    opacity: 0;
+    transform: translateY(-12px);
+    transition:
+      opacity 0.35s ease,
+      transform 0.5s var(--ease-out-expo),
+      overlay 0.35s allow-discrete,
+      display 0.35s allow-discrete;
+  }
+  .mobile-menu[open] {
+    display: flex;
+    opacity: 1;
+    transform: none;
+  }
+  @starting-style {
+    .mobile-menu[open] {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+  }
+  .mobile-menu::backdrop {
+    background: transparent;
+  }
+  .mobile-menu__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 16px 18px 24px;
+  }
+  .mobile-menu__top .menu-btn {
+    display: grid;
+  }
+  .mobile-menu :global(.mobile-menu__logo) {
+    height: 36px;
+    width: auto;
+  }
+  .mobile-menu__links {
+    padding: 2rem 24px 1rem;
+  }
+  .mobile-menu__links li {
+    border-bottom: 1px solid var(--color-line);
+  }
+  .mobile-menu__links a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 4.25rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+  .mobile-menu__links a :global(.icon) {
+    color: var(--color-pink);
+  }
+  .mobile-menu[open] .mobile-menu__links li {
+    animation: menu-in 0.6s var(--ease-out-expo) both;
+    animation-delay: calc(80ms + var(--i) * 50ms);
+  }
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+  .mobile-menu__footer {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem 24px;
+    margin-top: auto;
+  }
+  .mobile-menu__hours {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-ink-muted);
+  }
+  .mobile-menu :global(.mobile-menu__mosaic) {
+    margin-top: 1rem;
+  }
+</style>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-header]');
+
+  if (header) {
+    /* -------- bolha ao rolar + progresso de leitura -------- */
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const y = window.scrollY;
+      header.classList.toggle('is-floating', y > 8);
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      header.style.setProperty('--progress', String(max > 0 ? Math.min(1, y / max) : 0));
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      },
+      { passive: true },
+    );
+    update();
+
+    /* -------- link ativo conforme a seção visível -------- */
+    const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]'));
+    const byId = new Map<string, HTMLAnchorElement>();
+    for (const link of links) {
+      const hash = new URL(link.href, location.href).hash.slice(1);
+      const target = hash ? document.getElementById(hash) : null;
+      if (target) byId.set(hash, link);
+    }
+    if (byId.size) {
+      const spy = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const link = byId.get(entry.target.id);
+            if (!link) continue;
+            if (entry.isIntersecting) {
+              links.forEach((l) => l.removeAttribute('aria-current'));
+              link.setAttribute('aria-current', 'true');
+            } else if (link.getAttribute('aria-current')) {
+              link.removeAttribute('aria-current');
+            }
+          }
+        },
+        { rootMargin: '-45% 0px -50% 0px' },
+      );
+      byId.forEach((_, id) => spy.observe(document.getElementById(id)!));
+    }
+  }
+
+  /* -------- menu mobile (dialog nativo: foco preso + Esc) -------- */
+  const menu = document.querySelector<HTMLDialogElement>('[data-menu]');
+  const openBtn = document.querySelector<HTMLButtonElement>('[data-menu-open]');
+  if (menu && openBtn) {
+    openBtn.addEventListener('click', () => {
+      menu.showModal();
+      openBtn.setAttribute('aria-expanded', 'true');
+    });
+    menu.querySelector('[data-menu-close]')?.addEventListener('click', () => menu.close());
+    menu.querySelectorAll('[data-menu-link]').forEach((a) => a.addEventListener('click', () => menu.close()));
+    menu.addEventListener('close', () => openBtn.setAttribute('aria-expanded', 'false'));
+    window.matchMedia('(min-width: 1024px)').addEventListener('change', (e) => e.matches && menu.close());
+  }
+</script>

@@ -1,0 +1,413 @@
+---
+/**
+ * Newsletter via Substack.
+ *
+ * Para ativar, preencha `substackUrl` (ex.: https://designmall.substack.com) no /admin.
+ *  - mode "form":  formulário no design do site; envia direto para o Substack
+ *                  (abre a confirmação do Substack em nova aba)
+ *  - mode "embed": iframe oficial do Substack, emoldurado no layout
+ * Sem URL configurada, o formulário mostra a mensagem `pendingMessage`.
+ */
+import Logo from '../brand/Logo.astro';
+import Mosaic from '../brand/Mosaic.astro';
+import Icon from '../ui/Icon.astro';
+import { richText } from '../../lib/text';
+import type { SectionData } from '../../lib/content/schema';
+
+interface Props {
+  data: SectionData<'newsletter'>;
+  anchor: string | null;
+}
+
+const { data, anchor } = Astro.props;
+const base = data.substackUrl.trim().replace(/\/+$/, '');
+const configured = /^https?:\/\//.test(base);
+const action = configured ? `${base}/api/v1/free?nojs=true` : undefined;
+const embedSrc = configured ? `${base}/embed` : undefined;
+const fieldId = `${anchor ?? 'newsletter'}-email`;
+const errorId = `${fieldId}-erro`;
+---
+
+<section class="section newsletter" id={anchor ?? undefined} aria-labelledby={`${fieldId}-titulo`}>
+  <div class="container-site">
+    <div class="newsletter__card" data-reveal="scale">
+      <Mosaic cols={2} rows={4} seed={17} live class="newsletter__mosaic newsletter__mosaic--left" />
+      <Mosaic cols={2} rows={4} seed={29} live class="newsletter__mosaic newsletter__mosaic--right" />
+
+      <div class="newsletter__content">
+        <span class="newsletter__badge">
+          <Logo variant="icon" title="" class="newsletter__badge-icon" />
+          {data.eyebrow}
+        </span>
+
+        <h2 class="display-title newsletter__title" id={`${fieldId}-titulo`} set:html={richText(data.title)} />
+        {data.text && <p class="lead newsletter__text">{data.text}</p>}
+
+        {
+          data.perks.length > 0 && (
+            <ul class="newsletter__perks" role="list">
+              {data.perks.map((perk) => (
+                <li>
+                  <Icon name="check" size={16} strokeWidth={3} />
+                  {perk}
+                </li>
+              ))}
+            </ul>
+          )
+        }
+
+        {
+          data.mode === 'embed' && configured ? (
+            <div class="newsletter__embed">
+              <iframe src={embedSrc} title="Inscrição na newsletter do Design Mall (Substack)" loading="lazy" />
+            </div>
+          ) : (
+            <form
+              class="newsletter__form"
+              method="post"
+              action={action}
+              target="_blank"
+              novalidate
+              data-newsletter
+              data-configured={configured ? 'true' : 'false'}
+              data-success={data.successMessage}
+              data-pending={data.pendingMessage}
+            >
+              <label class="newsletter__label" for={fieldId}>
+                Seu melhor e-mail
+              </label>
+              <div class="newsletter__field">
+                <Icon name="mail" size={20} class="newsletter__field-icon" />
+                <input
+                  id={fieldId}
+                  type="email"
+                  name="email"
+                  inputmode="email"
+                  autocomplete="email"
+                  placeholder={data.placeholder}
+                  required
+                  aria-describedby={errorId}
+                />
+                <button class="btn" type="submit">
+                  <span>{data.buttonLabel}</span>
+                  <Icon name="arrow-right" size={18} />
+                </button>
+              </div>
+              <input type="hidden" name="first_url" value="" />
+              <input type="hidden" name="first_referrer" value="" />
+              <input type="hidden" name="current_url" value="" />
+              <input type="hidden" name="source" value="embed" />
+              <p class="newsletter__feedback" id={errorId} role="status" aria-live="polite" data-feedback />
+            </form>
+          )
+        }
+
+        {data.disclaimer && <p class="newsletter__disclaimer">{data.disclaimer}</p>}
+      </div>
+
+      <div class="newsletter__confetti" aria-hidden="true" data-confetti></div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .newsletter__card {
+    position: relative;
+    display: grid;
+    place-items: center;
+    padding: clamp(3rem, 8vw, 6.5rem) clamp(1.25rem, 5vw, 4rem);
+    border-radius: var(--radius-sheet);
+    background:
+      radial-gradient(60% 80% at 50% 0%, rgb(240 95 142 / 0.16), transparent 70%),
+      radial-gradient(50% 70% at 50% 110%, rgb(36 175 193 / 0.12), transparent 70%),
+      var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--color-line);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .newsletter :global(.newsletter__mosaic) {
+    position: absolute;
+    top: 50%;
+    width: clamp(7rem, 14vw, 12rem);
+    translate: 0 -50%;
+    z-index: -1;
+    opacity: 0.95;
+  }
+  .newsletter :global(.newsletter__mosaic--left) {
+    left: 0;
+  }
+  .newsletter :global(.newsletter__mosaic--right) {
+    right: 0;
+  }
+  @media (max-width: 1023px) {
+    .newsletter :global(.newsletter__mosaic) {
+      display: none;
+    }
+  }
+
+  .newsletter__content {
+    display: grid;
+    justify-items: center;
+    gap: 1.25rem;
+    width: 100%;
+    max-width: 40rem;
+    text-align: center;
+  }
+  .newsletter__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.875rem 0.375rem 0.5rem;
+    border-radius: 999px;
+    background: rgb(238 238 238 / 0.08);
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+  }
+  .newsletter :global(.newsletter__badge-icon) {
+    height: 1.375rem;
+    width: auto;
+  }
+  .newsletter__title {
+    font-size: clamp(2.5rem, 6vw, 4.75rem);
+  }
+  .newsletter__text {
+    margin-inline: auto;
+  }
+
+  .newsletter__perks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+  }
+  .newsletter__perks li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .newsletter__perks :global(.icon) {
+    color: var(--color-teal);
+  }
+
+  .newsletter__form {
+    width: 100%;
+    margin-top: 1rem;
+    text-align: left;
+  }
+  .newsletter__label {
+    display: block;
+    margin: 0 0 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+  }
+  .newsletter__field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem;
+    border-radius: 999px;
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--color-line-strong);
+    transition: box-shadow 0.25s ease;
+  }
+  .newsletter__field:focus-within {
+    box-shadow:
+      inset 0 0 0 2px var(--color-teal),
+      0 0 0 6px rgb(36 175 193 / 0.15);
+  }
+  .newsletter__field[data-invalid] {
+    box-shadow: inset 0 0 0 2px var(--color-pink);
+  }
+  .newsletter__field :global(.newsletter__field-icon) {
+    flex: none;
+    margin-left: 1rem;
+    color: var(--color-ink-muted);
+  }
+  .newsletter__field input {
+    flex: 1;
+    min-width: 0;
+    height: 3.25rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-ink);
+    font-size: 1rem;
+    outline: none;
+  }
+  .newsletter__field input::placeholder {
+    color: var(--color-ink-muted);
+  }
+  .newsletter__field .btn {
+    flex: none;
+  }
+  .newsletter__field .btn[aria-busy='true'] {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  @media (max-width: 559px) {
+    .newsletter__field {
+      flex-wrap: wrap;
+      border-radius: 1.75rem;
+      padding: 0.5rem;
+    }
+    .newsletter__field input {
+      flex-basis: calc(100% - 3.5rem);
+    }
+    .newsletter__field .btn {
+      width: 100%;
+    }
+  }
+
+  .newsletter__feedback {
+    min-height: 1.5rem;
+    margin: 0.75rem 0 0 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+  .newsletter__feedback[data-state='error'] {
+    color: var(--color-pink);
+  }
+  .newsletter__feedback[data-state='success'],
+  .newsletter__feedback[data-state='pending'] {
+    color: var(--color-teal);
+  }
+
+  .newsletter__embed {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.5rem;
+    border-radius: 1.5rem;
+    background: var(--color-ink);
+  }
+  .newsletter__embed iframe {
+    display: block;
+    width: 100%;
+    height: 320px;
+    border: 0;
+    border-radius: 1rem;
+    background: #fff;
+  }
+
+  .newsletter__disclaimer {
+    font-size: 0.8125rem;
+    color: var(--color-ink-muted);
+  }
+
+  /* explosão de grafismos ao inscrever — um "presente" abrindo */
+  .newsletter__confetti {
+    position: absolute;
+    left: 50%;
+    top: 62%;
+    pointer-events: none;
+  }
+  .newsletter__confetti :global(i) {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    animation: burst 1.1s var(--ease-out-expo) forwards;
+  }
+  @keyframes burst {
+    from {
+      transform: translate(0, 0) rotate(0) scale(1);
+      opacity: 1;
+    }
+    to {
+      transform: translate(var(--x), var(--y)) rotate(var(--rot)) scale(0.4);
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const colors = ['#F05F8E', '#24AFC1', '#6B4F9E', '#EEEEEE'];
+
+  const celebrate = (host: HTMLElement | null) => {
+    if (!host || reduce.matches) return;
+    for (let i = 0; i < 22; i++) {
+      const piece = document.createElement('i');
+      const angle = (Math.PI * 2 * i) / 22;
+      const dist = 120 + Math.random() * 160;
+      piece.style.background = colors[i % colors.length];
+      piece.style.borderRadius = i % 3 === 0 ? '50%' : i % 3 === 1 ? '14px 14px 0 0' : '2px';
+      piece.style.setProperty('--x', `${Math.cos(angle) * dist}px`);
+      piece.style.setProperty('--y', `${Math.sin(angle) * dist - 40}px`);
+      piece.style.setProperty('--rot', `${Math.random() * 540 - 270}deg`);
+      host.appendChild(piece);
+      setTimeout(() => piece.remove(), 1200);
+    }
+  };
+
+  document.querySelectorAll<HTMLFormElement>('[data-newsletter]').forEach((form) => {
+    const input = form.querySelector<HTMLInputElement>('input[type="email"]')!;
+    const field = form.querySelector<HTMLElement>('.newsletter__field')!;
+    const feedback = form.querySelector<HTMLElement>('[data-feedback]')!;
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    const confetti = form.closest('.newsletter__card')?.querySelector<HTMLElement>('[data-confetti]') ?? null;
+
+    const say = (state: 'error' | 'success' | 'pending' | '', message: string) => {
+      feedback.dataset.state = state;
+      feedback.textContent = message;
+      if (state === 'error') {
+        field.setAttribute('data-invalid', '');
+        input.setAttribute('aria-invalid', 'true');
+      } else {
+        field.removeAttribute('data-invalid');
+        input.removeAttribute('aria-invalid');
+      }
+    };
+
+    // valida ao sair do campo (não a cada tecla)
+    input.addEventListener('blur', () => {
+      if (input.value && !EMAIL.test(input.value.trim())) say('error', 'Confira o e-mail: parece que falta alguma coisa.');
+    });
+    input.addEventListener('input', () => {
+      if (feedback.dataset.state === 'error' && EMAIL.test(input.value.trim())) say('', '');
+    });
+
+    form.addEventListener('submit', (event) => {
+      const email = input.value.trim();
+      if (!EMAIL.test(email)) {
+        event.preventDefault();
+        say('error', email ? 'Confira o e-mail: parece que falta alguma coisa.' : 'Digite seu e-mail para receber as novidades.');
+        input.focus();
+        return;
+      }
+
+      if (form.dataset.configured !== 'true') {
+        event.preventDefault();
+        say('pending', form.dataset.pending ?? '');
+        celebrate(confetti);
+        return;
+      }
+
+      // Envio nativo para o Substack (nova aba com a confirmação).
+      const set = (name: string, value: string) => {
+        const el = form.querySelector<HTMLInputElement>(`input[name="${name}"]`);
+        if (el) el.value = value;
+      };
+      set('first_url', location.href);
+      set('current_url', location.href);
+      set('first_referrer', document.referrer);
+
+      button.setAttribute('aria-busy', 'true');
+      window.setTimeout(() => {
+        button.removeAttribute('aria-busy');
+        say('success', form.dataset.success ?? '');
+        celebrate(confetti);
+        form.reset();
+      }, 400);
+    });
+  });
+</script>

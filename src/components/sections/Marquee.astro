@@ -1,0 +1,84 @@
+---
+import Tile from '../brand/Tile.astro';
+import { tileKinds } from '../brand/tiles';
+import type { SectionData } from '../../lib/content/schema';
+
+interface Props {
+  data: SectionData<'marquee'>;
+  anchor: string | null;
+}
+
+const { data, anchor } = Astro.props;
+---
+
+<section class="marquee" id={anchor ?? undefined} aria-label={data.items.join(', ')}>
+  <div class="marquee__track" style={`--duration:${data.duration}s`}>
+    {
+      [0, 1].map((copy) => (
+        <ul class="marquee__group" aria-hidden="true">
+          {data.items.map((item, i) => (
+            <li>
+              <span class:list={['marquee__word', i % 2 === 1 && 'is-outline']}>{item}</span>
+              <Tile kind={tileKinds[(i + copy) % tileKinds.length]} rotate={(i % 4) * 90} class="marquee__tile" />
+            </li>
+          ))}
+        </ul>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .marquee {
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(2rem, 5vw, 3.5rem);
+    border-bottom: 1px solid var(--color-line);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee__track {
+    display: flex;
+    width: max-content;
+    animation: marquee var(--duration, 38s) linear infinite;
+  }
+  .marquee:hover .marquee__track {
+    animation-play-state: paused;
+  }
+  .marquee__group {
+    display: flex;
+    align-items: center;
+    flex: none;
+  }
+  .marquee__group li {
+    display: flex;
+    align-items: center;
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    padding-right: clamp(1.25rem, 3vw, 2.5rem);
+  }
+  .marquee__word {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 7vw, 6rem);
+    font-weight: 900;
+    letter-spacing: -0.045em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .marquee__word.is-outline {
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgb(238 238 238 / 0.55);
+  }
+  .marquee :global(.marquee__tile) {
+    width: clamp(2.25rem, 4.5vw, 3.75rem);
+    border-radius: 0.5rem;
+  }
+  @keyframes marquee {
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee__track {
+      animation: none;
+    }
+  }
+</style>
