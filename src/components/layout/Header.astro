@@ -130,7 +130,9 @@ const cta = settings.headerCta ? { ...settings.headerCta, href: resolveHref(sett
     }
   }
   .site-header[data-mosaic]:not(.is-floating)::before {
-    right: var(--hero-mosaic-w);
+    /* esmaece antes da coluna de grafismos, sem aresta dura quando ela some no quadro final */
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--hero-mosaic-w) - 14rem), transparent calc(100% - var(--hero-mosaic-w)));
+    mask-image: linear-gradient(to right, #000 calc(100% - var(--hero-mosaic-w) - 14rem), transparent calc(100% - var(--hero-mosaic-w)));
   }
 
   /* véu escuro no topo para garantir leitura sobre a foto do hero */
