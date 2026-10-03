@@ -9,9 +9,10 @@
  */
 import type { Category, MallEvent, Section, Settings, Store } from './schema.ts';
 
-const img = (name: string, alt: string, sizes: [number, number] = [720, 1400]) => ({
-  src: `/images/${name}-${sizes[1]}.webp`,
-  srcset: `/images/${name}-${sizes[0]}.webp ${sizes[0]}w, /images/${name}-${sizes[1]}.webp ${sizes[1]}w`,
+/** Fotos reais do shopping (public/images/real-*). */
+const real = (name: string, alt: string) => ({
+  src: `/images/${name}-1980.webp`,
+  srcset: `/images/${name}-720.webp 720w, /images/${name}-1400.webp 1400w, /images/${name}-1980.webp 1980w`,
   alt,
 });
 
@@ -26,7 +27,7 @@ export const seedSettings: Settings = {
     title: 'Design Mall — Um presente para todos',
     description:
       'Moda, gastronomia, serviços e encontros conectados em um só lugar. Conheça as lojas, a agenda e tudo o que o Design Mall preparou para você.',
-    image: '/images/mall-fachada-1280.webp',
+    image: '/images/real-atrio-1400.webp',
   },
   address: {
     street: 'Av. Lorem Ipsum, 1000',
@@ -52,6 +53,7 @@ export const seedSettings: Settings = {
   ],
   nav: [
     { label: 'O Mall', href: '#conceito' },
+    { label: 'Tour 360°', href: '#tour' },
     { label: 'Experiências', href: '#experiencias' },
     { label: 'Lojas', href: '#lojas' },
     { label: 'Agenda', href: '#agenda' },
@@ -67,6 +69,7 @@ export const seedSettings: Settings = {
         title: 'Explore',
         links: [
           { label: 'O conceito', href: '#conceito' },
+          { label: 'Tour 360°', href: '#tour' },
           { label: 'Lojas', href: '#lojas' },
           { label: 'Agenda', href: '#agenda' },
           { label: 'Como chegar', href: '#visite' },
@@ -98,17 +101,22 @@ const sectionList = [
       eyebrow: 'Design Life Center',
       title: 'Viva\no *novo.*',
       subtitle:
-        'Moda, sabores, serviços e encontros conectados em um só lugar. O Design Mall foi pensado como um presente — para a cidade e para você.',
+        'Jardins suspensos, café no átrio, rooftop com vista para a cidade e lojas conectadas em um só lugar. O Design Mall foi pensado como um presente — para a cidade e para você.',
       primaryCta: { label: 'Explorar lojas', href: '#lojas' },
       secondaryCta: { label: 'Como chegar', href: '#visite' },
       image: {
-        src: '/images/mall-fachada-2400.webp',
-        srcset: '/images/mall-fachada-1280.webp 1280w, /images/mall-fachada-2400.webp 2400w',
-        alt: 'Fachada do Design Mall com torre e galerias de lojas',
-        width: 2400,
-        height: 1698,
+        ...real('real-atrio', 'Átrio do Design Mall com jardim vertical, escadas rolantes e café ao fundo'),
+        width: 1980,
+        height: 1320,
       },
-      imageTone: 'brand',
+      imageTone: 'none',
+      video: {
+        src: '/video/hero.mp4',
+        reverseSrc: '/video/hero-rev.mp4',
+        poster: '/images/hero-start.webp',
+      },
+      endLabel: 'Design Mall',
+      endText: 'Um presente para todos.',
       highlights: [
         { value: '+120', label: 'lojas e serviços' },
         { value: '7 dias', label: 'por semana' },
@@ -135,8 +143,25 @@ const sectionList = [
       text:
         'Todo presente começa com cuidado. Por isso cada detalhe do Design Mall foi pensado para que a sua visita seja como **abrir algo especial**: um ambiente bonito, feito para pessoas e sempre preocupado em **oferecer o melhor** para quem chega. Aqui, o novo é para **todos**.',
       signature: 'Um presente para todos.',
-      image: img('presente-sacola', 'Sacola do Design Mall com grafismos coloridos', [800, 1600]),
-      caption: 'A sacola que vira presente: o símbolo que inspirou a nossa marca.',
+      image: real('real-rooftop', 'Rooftop do Design Mall com pergolado, luminárias e a torre ao fundo'),
+      caption: 'O rooftop: um respiro a céu aberto, com vista para a cidade.',
+    },
+  },
+  {
+    id: 'tour',
+    type: 'tour',
+    anchor: 'tour',
+    data: {
+      eyebrow: 'Tour virtual 360°',
+      title: 'Conheça o Design Mall *sem sair do lugar.*',
+      subtitle:
+        'Um passeio completo, em 360°, por todo o shopping: do estacionamento ao rooftop. Dê o play, arraste a tela e escolha para onde olhar.',
+      videoId: 'qoXUkd9tRZM',
+      poster: real('real-cafe', 'Vista de cima do átrio do Design Mall, com café, jardim vertical e escadas rolantes'),
+      playLabel: 'Assistir ao tour',
+      badge: '360°',
+      hint: 'Arraste para olhar ao redor',
+      bullets: ['Do estacionamento ao rooftop', 'Arraste para explorar', 'Funciona em tela cheia'],
     },
   },
   {
@@ -155,6 +180,48 @@ const sectionList = [
         { title: 'Bem-estar', description: 'Saúde, beleza e cuidado para corpo e mente.', icon: 'heart', tone: 'teal', category: 'bem-estar' },
         { title: 'Kids & Lazer', description: 'Diversão para os pequenos e programas em família.', icon: 'smile', tone: 'pink', category: 'kids' },
         { title: 'Casa & Design', description: 'Peças e ideias para deixar seu espaço com a sua cara.', icon: 'home', tone: 'violet', category: 'casa' },
+      ],
+    },
+  },
+  {
+    id: 'espacos',
+    type: 'gallery',
+    anchor: 'espacos',
+    data: {
+      eyebrow: 'Os espaços',
+      title: 'Feito para *ficar, passear e voltar.*',
+      subtitle: 'Cada canto do Design Mall foi desenhado para você se sentir em casa — mesmo quando está só de passagem.',
+      items: [
+        {
+          image: real('real-atrio', 'Átrio com jardim vertical, escadas rolantes e fachadas de lojas'),
+          tag: 'Átrio',
+          title: 'Um jardim no meio do shopping',
+          text: 'Paredes verdes, luz de cinema e escadas rolantes que conectam todos os pisos.',
+        },
+        {
+          image: real('real-cafe', 'Café e mesas no átrio, vistos do alto'),
+          tag: 'Gastronomia',
+          title: 'Pausa para um café',
+          text: 'Mesas ao redor das árvores do átrio, para encontrar quem você gosta.',
+        },
+        {
+          image: real('real-rooftop', 'Rooftop com pergolado e luminárias'),
+          tag: 'Rooftop',
+          title: 'Céu aberto na cobertura',
+          text: 'Um espaço para respirar, com vista para a cidade.',
+        },
+        {
+          image: real('real-lounge', 'Lounge com grama, poltronas laranja e sofás na galeria de lojas'),
+          tag: 'Convivência',
+          title: 'Lounge na galeria',
+          text: 'Poltronas, sofás e um pedacinho de gramado entre uma loja e outra.',
+        },
+        {
+          image: real('real-garagem', 'Estacionamento coberto e iluminado do Design Mall'),
+          tag: 'Conforto',
+          title: 'Estacionamento coberto',
+          text: 'Amplo, bem iluminado e sinalizado, a poucos passos das lojas.',
+        },
       ],
     },
   },
@@ -211,8 +278,8 @@ const sectionList = [
       title: 'Sua marca no lugar *mais conectado* da cidade.',
       subtitle: '',
       text:
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Espaços versáteis, fluxo qualificado e um time dedicado a fazer a sua operação crescer junto com a gente.',
-      image: img('grafismos-parede', 'Parede com os grafismos geométricos do Design Mall', [800, 1600]),
+        'Galerias iluminadas, áreas de convivência e muita circulação: o cenário certo para a sua marca ser vista. Espaços versáteis e um time dedicado a fazer a sua operação crescer junto com a gente.',
+      image: real('real-lounge', 'Galeria do Design Mall com lojas, escadas rolantes e área de convivência'),
       cta: { label: 'Falar com o comercial', href: 'mailto:comercial@designmall.com.br' },
       reverse: false,
       bullets: ['Lojas de 30 a 600 m²', 'Quiosques e espaços de experiência', 'Mídia e ativações de marca'],
@@ -230,7 +297,7 @@ const sectionList = [
       mapEmbedUrl: '',
       mapsUrl: 'https://maps.google.com/?q=Design+Mall',
       wazeUrl: 'https://waze.com/ul?q=Design%20Mall',
-      image: img('estacionamento', 'Estacionamento coberto do Design Mall'),
+      image: real('real-garagem', 'Estacionamento coberto e iluminado do Design Mall'),
       info: [
         { icon: 'car', title: 'Estacionamento', text: '1.200 vagas cobertas, preferenciais e bicicletário.' },
         { icon: 'navigation', title: 'Transporte público', text: 'Ponto de ônibus em frente à entrada principal.' },

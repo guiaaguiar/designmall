@@ -7,12 +7,14 @@ import Events from './Events.astro';
 import Experiences from './Experiences.astro';
 import Faq from './Faq.astro';
 import Feature from './Feature.astro';
+import Gallery from './Gallery.astro';
 import Hero from './Hero.astro';
 import Manifesto from './Manifesto.astro';
 import Marquee from './Marquee.astro';
 import Newsletter from './Newsletter.astro';
 import Stats from './Stats.astro';
 import Stores from './Stores.astro';
+import Tour from './Tour.astro';
 import Visit from './Visit.astro';
 
 // Componentes .astro não têm tipagem de props genérica; o contrato é:
@@ -27,6 +29,8 @@ export const sectionComponents: Record<SectionType, any> = {
   events: Events,
   feature: Feature,
   stats: Stats,
+  tour: Tour,
+  gallery: Gallery,
   visit: Visit,
   faq: Faq,
   newsletter: Newsletter,

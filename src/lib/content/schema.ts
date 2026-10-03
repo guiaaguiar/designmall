@@ -100,6 +100,21 @@ export const sectionSchemas = {
     primaryCta: linkSchema.optional(),
     secondaryCta: linkSchema.optional(),
     image: imageSchema.optional(),
+    /**
+     * Vídeo de abertura conduzido pelo scroll: rolar para baixo toca `src` (e trava a página
+     * até o fim); rolar para cima no topo toca `reverseSrc` (o mesmo vídeo invertido).
+     */
+    video: z
+      .object({
+        src: z.string(),
+        reverseSrc: z.string(),
+        /** primeiro quadro (mostrado enquanto o vídeo carrega) */
+        poster: z.string(),
+      })
+      .optional(),
+    /** legenda que surge no fim do vídeo */
+    endLabel: text,
+    endText: text,
     /** brand = tonaliza a foto para o cinza da marca; none = foto original */
     imageTone: z.enum(['brand', 'none']).default('brand'),
     highlights: z.array(z.object({ value: z.string(), label: z.string() })).default([]),
@@ -136,6 +151,35 @@ export const sectionSchemas = {
           /** slug da categoria — ao clicar, filtra a vitrine de lojas */
           category: z.string().optional(),
           image: imageSchema.optional(),
+        }),
+      )
+      .default([]),
+  }),
+
+  /** Destaque de vídeo (YouTube, inclusive 360°). Carrega o player só ao clicar. */
+  tour: z.object({
+    ...sectionHeader,
+    /** id do vídeo do YouTube (o que vem depois de v=) */
+    videoId: z.string().min(1),
+    poster: imageSchema.optional(),
+    playLabel: z.string().default('Assistir ao tour'),
+    /** selo sobre o vídeo, ex.: "360°" */
+    badge: text,
+    /** dica de interação, ex.: "Arraste para olhar ao redor" */
+    hint: text,
+    bullets: z.array(z.string()).default([]),
+  }),
+
+  /** Mosaico editorial de fotos dos espaços. */
+  gallery: z.object({
+    ...sectionHeader,
+    items: z
+      .array(
+        z.object({
+          image: imageSchema,
+          title: z.string(),
+          text: text,
+          tag: text,
         }),
       )
       .default([]),

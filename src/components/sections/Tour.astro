@@ -1,0 +1,301 @@
+---
+import Tile from '../brand/Tile.astro';
+import Icon from '../ui/Icon.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import type { SectionData } from '../../lib/content/schema';
+
+interface Props {
+  data: SectionData<'tour'>;
+  anchor: string | null;
+}
+
+const { data, anchor } = Astro.props;
+const embed = `https://www.youtube-nocookie.com/embed/${data.videoId}?autoplay=1&rel=0&playsinline=1&modestbranding=1`;
+const watch = `https://www.youtube.com/watch?v=${data.videoId}`;
+---
+
+<section class="section tour" id={anchor ?? undefined}>
+  <div class="container-site">
+    <SectionHeading eyebrow={data.eyebrow} title={data.title} subtitle={data.subtitle} />
+
+    <div class="tour__stage" data-reveal="scale" data-tour data-embed={embed}>
+      <div class="tour__frame">
+        {
+          data.poster && (
+            <img
+              class="tour__poster"
+              src={data.poster.src}
+              srcset={data.poster.srcset}
+              sizes="(min-width: 1280px) 1200px, 100vw"
+              alt={data.poster.alt}
+              loading="lazy"
+              decoding="async"
+            />
+          )
+        }
+        <div class="tour__veil"></div>
+
+        {data.badge && <span class="tour__badge">{data.badge}</span>}
+
+        <button type="button" class="tour__play" data-tour-play aria-label={`${data.playLabel} (vídeo)`}>
+          <span class="tour__drop" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5Z" /></svg>
+          </span>
+          <span class="tour__label">{data.playLabel}</span>
+        </button>
+
+        {
+          data.hint && (
+            <p class="tour__hint">
+              <Icon name="sparkles" size={16} />
+              {data.hint}
+            </p>
+          )
+        }
+      </div>
+      <Tile kind="half" rotate={180} class="tour__corner tour__corner--a" />
+      <Tile kind="quarter" rotate={0} class="tour__corner tour__corner--b" />
+    </div>
+
+    <div class="tour__foot">
+      {
+        data.bullets.length > 0 && (
+          <ul class="tour__bullets" role="list">
+            {data.bullets.map((b, i) => (
+              <li data-reveal style={`--delay:${i * 80}ms`}>
+                <Icon name="check" size={18} />
+                {b}
+              </li>
+            ))}
+          </ul>
+        )
+      }
+      <a class="link-arrow" href={watch} target="_blank" rel="noopener" data-reveal>
+        Abrir no YouTube
+        <Icon name="arrow-up-right" size={18} />
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .tour__stage {
+    position: relative;
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  }
+  .tour__frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-sheet);
+    overflow: hidden;
+    background: var(--color-bg-deep);
+    box-shadow:
+      inset 0 0 0 1px var(--color-line-strong),
+      0 40px 80px -40px rgb(0 0 0 / 0.7);
+    isolation: isolate;
+  }
+  @media (max-width: 639px) {
+    .tour__frame {
+      aspect-ratio: 4 / 5;
+      border-radius: var(--radius-card);
+    }
+  }
+  .tour__poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.04);
+    transition: transform 1.6s var(--ease-out-expo);
+    z-index: -2;
+  }
+  .tour__stage:hover .tour__poster {
+    transform: scale(1.1);
+  }
+  .tour__veil {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(60% 60% at 50% 55%, rgb(35 31 32 / 0) 0%, rgb(35 31 32 / 0.55) 100%),
+      linear-gradient(to top, rgb(35 31 32 / 0.8), rgb(35 31 32 / 0) 45%);
+  }
+
+  .tour__badge {
+    position: absolute;
+    top: clamp(1rem, 2.4vw, 1.75rem);
+    left: clamp(1rem, 2.4vw, 1.75rem);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    background: var(--color-pink);
+    color: var(--color-on-accent);
+    font-family: var(--font-display);
+    font-weight: 900;
+    letter-spacing: 0.02em;
+  }
+
+  .tour__play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 1rem;
+    color: var(--color-ink);
+  }
+  .tour__play:focus-visible {
+    outline-offset: -6px;
+  }
+  /* gota da marca: quadrado girado 45° com a base arredondada */
+  .tour__drop {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: clamp(4.5rem, 9vw, 6.5rem);
+    aspect-ratio: 1;
+    border-radius: 50% 0 50% 50%;
+    background: var(--color-pink);
+    color: var(--color-on-accent);
+    transform: rotate(45deg);
+    transition: transform 0.7s var(--ease-spring), background-color 0.3s ease;
+  }
+  .tour__drop svg {
+    transform: rotate(-45deg) translateX(2px);
+  }
+  .tour__drop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 2px solid var(--color-pink);
+    animation: tour-ping 2.4s var(--ease-out-expo) infinite;
+  }
+  @keyframes tour-ping {
+    from {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1.7);
+    }
+  }
+  .tour__play:hover .tour__drop {
+    transform: rotate(405deg) scale(1.08);
+    background: var(--color-teal);
+  }
+  .tour__label {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.125rem;
+    letter-spacing: -0.01em;
+    text-shadow: 0 2px 16px rgb(0 0 0 / 0.5);
+  }
+  .tour__hint {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(1rem, 2.4vw, 1.75rem);
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    background: rgb(35 31 32 / 0.7);
+    backdrop-filter: blur(10px);
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .tour__frame :global(iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    animation: tour-in 0.8s var(--ease-out-expo) both;
+  }
+  @keyframes tour-in {
+    from {
+      opacity: 0;
+      transform: scale(1.04);
+    }
+  }
+  .tour__stage.is-playing .tour__poster,
+  .tour__stage.is-playing .tour__veil,
+  .tour__stage.is-playing .tour__badge,
+  .tour__stage.is-playing .tour__play,
+  .tour__stage.is-playing .tour__hint {
+    display: none;
+  }
+
+  .tour__stage :global(.tour__corner) {
+    position: absolute;
+    width: clamp(3.5rem, 8vw, 6rem);
+    border-radius: 1.25rem;
+    overflow: hidden;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .tour__stage :global(.tour__corner--a) {
+    top: calc(clamp(3.5rem, 8vw, 6rem) / -2);
+    right: clamp(1.5rem, 6vw, 5rem);
+  }
+  .tour__stage :global(.tour__corner--b) {
+    bottom: calc(clamp(3.5rem, 8vw, 6rem) / -2);
+    left: clamp(1.5rem, 6vw, 5rem);
+  }
+  .tour__stage:hover :global(.tour__corner) {
+    transform: rotate(calc(var(--r) + 90deg));
+  }
+
+  .tour__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  }
+  .tour__bullets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+  }
+  .tour__bullets li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+  }
+  .tour__bullets :global(.icon) {
+    color: var(--color-teal);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tour__drop::after {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-tour]').forEach((stage) => {
+    const play = stage.querySelector<HTMLButtonElement>('[data-tour-play]');
+    play?.addEventListener('click', () => {
+      const frame = stage.querySelector('.tour__frame');
+      if (!frame || !stage.dataset.embed) return;
+      const iframe = document.createElement('iframe');
+      iframe.src = stage.dataset.embed;
+      iframe.title = 'Tour virtual 360° pelo Design Mall';
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+      iframe.allowFullscreen = true;
+      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+      frame.appendChild(iframe);
+      stage.classList.add('is-playing');
+    });
+  });
+</script>
