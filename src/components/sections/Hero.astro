@@ -539,7 +539,9 @@ const lines = data.title.split('\n');
 
     const park = (at: 'start' | 'end') => {
       state = at;
-      cooldownUntil = performance.now() + 700;
+      // a pausa só vale ao voltar ao início (evita reabrir o vídeo com a inércia do gesto);
+      // no fim, o scroll para baixo é liberado na hora
+      cooldownUntil = at === 'start' ? performance.now() + 700 : 0;
       cancelAnimationFrame(raf);
       phase(at);
       if (at === 'start') {
@@ -554,6 +556,7 @@ const lines = data.title.split('\n');
         rev.currentTime = 0;
         showFwd();
         setV(1);
+        topSince = performance.now(); // a inércia do gesto não dispara o vídeo invertido
       }
     };
 
@@ -653,12 +656,17 @@ const lines = data.title.split('\n');
     // links do menu (#lojas…): pula a abertura e segue direto para a seção
     document.addEventListener('click', (e) => {
       const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#"]');
-      if (!a || a.getAttribute('href') === '#' || a.hash === '#inicio') return;
-      if (state !== 'end') {
-        const v = state === 'playing' ? (rev.classList.contains('is-active') ? rev : fwd) : null;
-        v?.pause();
-        park('end');
+      if (!a || a.getAttribute('href') === '#') return;
+      fwd.pause();
+      rev.pause();
+      // logo (#inicio): volta ao topo já no 1º quadro da abertura
+      if (a.hash === '#inicio') {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        park('start');
+        return;
       }
+      if (state !== 'end') park('end');
     });
   }
 </script>
